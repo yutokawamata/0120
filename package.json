@@ -2,6 +2,7 @@
   "name": "0120",
   "version": "0.1.0",
   "private": true,
+  "homepage": "https://yutokawamata.github.io/0120",
   "dependencies": {
     "cra-template": "1.2.0",
     "react": "^19.0.0",
@@ -11,9 +12,10 @@
   "scripts": {
     "start": "WATCHPACK_POLLING=true react-scripts start",
     "build": "react-scripts build",
-    "deploy": "npm run build && your-deploy-command",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build -b main"
   },
   "eslintConfig": {
     "extends": [
