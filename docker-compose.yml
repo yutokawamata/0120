@@ -1,0 +1,16 @@
+services:
+  app:
+    build: ./
+    volumes:
+      - .:/usr/app  # ソースコードのルートディレクトリをマウント
+    working_dir: /usr/app  # 作業ディレクトリの指定
+    command: yarn start  # Reactアプリを起動
+    ports:
+      - "3001:3000"  # ホストのポート3000とコンテナのポート3000をバインド
+    environment:
+      - NODE_ENV=development  # 開発モードで実行
+      - CHOKIDAR_USEPOLLING=true
+      - CHOKIDAR_INTERVAL=100
+      - HOST=0.0.0.0
+    # コンテナ起動時に依存関係のインストールを実行する場合（オプション）
+    # entrypoint: ["sh", "-c", "yarn install && yarn start"]
