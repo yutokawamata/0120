@@ -1,4 +1,6 @@
 const CACHE_NAME = 'kanji-challenge-v1';
+
+// キャッシュに追加するファイル
 const urlsToCache = [
   '/',
   '/index.html',
