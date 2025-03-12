@@ -1,36 +1,13 @@
 import React, { useEffect, useState } from 'react';
+import { StateCheckers, StateTransitions, KanjiHelpers } from '../utils/stateManager';
+import styles from '../styles/components/Training.module.css';
 
-const trainingContainerStyle = {
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    gap: "20px",
-    width: "100%",
-    maxWidth: "1000px",
-    marginTop: "100px"
-};
-
-const kanjiDisplayStyle = {
-    fontSize: "180px",
-    cursor: "pointer",
-    userSelect: "none",  // テキスト選択を防ぐ
-};
-
-const progressStyle = {
-    fontSize: "18px",
-    color: "#666",
-};
-
-const imageStyle = {
-    maxWidth: "80%",
-    height: "auto",
-    opacity: 0,
-    transition: "opacity 0.5s ease-in-out",
-};
-
-const imageVisibleStyle = {
-    ...imageStyle,
-    opacity: 1,
+// ランダムな位置を生成する関数
+const getRandomPosition = () => {
+    return {
+        x: Math.random() * 60 + 20,
+        y: Math.random() * 60 + 20
+    };
 };
 
 /**
@@ -53,31 +30,44 @@ export const Training = ({
     const [showImage, setShowImage] = useState(false);
     const [hasPlayedAudio, setHasPlayedAudio] = useState(false);
     const [remainingKanji, setRemainingKanji] = useState([]);
-    const [showKanji, setShowKanji] = useState(false);  // 漢字表示の制御用
-    const [nextAudio, setNextAudio] = useState(null);   // 次の音声データを保持
+    const [showKanji, setShowKanji] = useState(false);
+    const [nextAudio, setNextAudio] = useState(null);
+    const [showBlackScreen, setShowBlackScreen] = useState(false);
+    const [currentAudio, setCurrentAudio] = useState(null);
 
-    // 音声データの準備
-    const prepareAudio = async (yomigana) => {
-        try {
-            const audioUrl = `https://deprecatedapis.tts.quest/v2/voicevox/audio/?text=${encodeURIComponent(yomigana)}&speaker=14&key=Y-19B-r0D4q5f20&speed=1.0&pitch=0&intonationScale=1`;
-            const response = await fetch(audioUrl);
-            if (!response.ok) {
-                throw new Error(`音声データの取得に失敗: ${response.status}`);
-            }
-            const audioBlob = await response.blob();
-            return new Audio(URL.createObjectURL(audioBlob));
-        } catch (error) {
-            return null;
-        }
+    // 個人モード用のstate
+    const [kanjiPosition, setKanjiPosition] = useState({ x: 50, y: 50 });
+    const [isKanjiClicked, setIsKanjiClicked] = useState(false);
+
+    const updateFunctions = {
+        updateNavigation,
+        updateKanji,
+        updateRepetition
     };
 
-    // 次の音声を準備
-    const prepareNextAudio = async () => {
-        if (state.currentKanjiIndex < remainingKanji.length - 1) {
-            const nextKanjiIndex = remainingKanji[state.currentKanjiIndex + 1];
-            const nextKanji = state.kanjiList[nextKanjiIndex];
-            const audio = await prepareAudio(nextKanji.yomigana);
-            setNextAudio(audio);
+    // 音声データの準備
+    const prepareAudio = async (voiceFile) => {
+        try {
+            if (!voiceFile) {
+                console.warn('音声ファイルが設定されていません');
+                return null;
+            }
+
+            const audioSrc = voiceFile.default || voiceFile;
+            const audio = new Audio(audioSrc);
+            
+            audio.preload = "auto";
+            audio.playsinline = true;
+            
+            await new Promise((resolve, reject) => {
+                audio.addEventListener('loadeddata', resolve);
+                audio.addEventListener('error', reject);
+            });
+
+            return audio;
+        } catch (error) {
+            console.error('音声データの準備中にエラーが発生:', error);
+            return null;
         }
     };
 
@@ -86,51 +76,119 @@ export const Training = ({
         if (!audio) return Promise.resolve();
         
         return new Promise((resolve) => {
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio.currentTime = 0;
+            }
+
+            const cleanup = () => {
+                setIsPlaying(false);
+                resolve();
+            };
+            
+            setCurrentAudio(audio);
+            
             audio.onplay = () => {
                 setIsPlaying(true);
                 setShowImage(false);
+                setShowKanji(true);
             };
 
             audio.onended = () => {
-                setIsPlaying(false);
-                URL.revokeObjectURL(audio.src);
-                setTimeout(() => {
-                    setShowImage(true);
-                    resolve();
-                }, 1500);
+                cleanup();
+                setTimeout(() => setShowImage(true), 800);
             };
 
             audio.onerror = () => {
-                setIsPlaying(false);
-                URL.revokeObjectURL(audio.src);
-                resolve();
+                cleanup();
+                setTimeout(() => setShowImage(true), 800);
             };
 
-            audio.play().catch(() => {
-                setIsPlaying(false);
-                URL.revokeObjectURL(audio.src);
-                resolve();
-            });
+            const attemptPlay = async () => {
+                try {
+                    await audio.play();
+                } catch (error) {
+                    console.error('音声再生エラー:', error);
+                    cleanup();
+                    setTimeout(() => setShowImage(true), 800);
+                }
+            };
+
+            attemptPlay();
         });
     };
 
     // 初期化処理
     useEffect(() => {
-        if (state.selectedKanji[state.selectedLevel]?.length > 0) {
-            const shuffled = [...state.selectedKanji[state.selectedLevel]].sort(() => Math.random() - 0.5);
-            setRemainingKanji(shuffled);
-            setShowKanji(false);
-            updateKanji({ currentKanjiIndex: 0 });
+        let isMounted = true;
 
-            // 最初の漢字の音声を事前に準備
-            const prepareFirstAudio = async () => {
+        const initializeTraining = async () => {
+            if (state.selectedKanji[state.selectedLevel]?.length > 0) {
+                const shuffled = [...state.selectedKanji[state.selectedLevel]]
+                    .sort(() => Math.random() - 0.5);
+                
+                if (isMounted) {
+                    setRemainingKanji(shuffled);
+                    setShowKanji(false);
+                    updateKanji({ currentKanjiIndex: 0 });
+                }
+
                 const firstKanji = state.kanjiList[shuffled[0]];
-                const audio = await prepareAudio(firstKanji.yomigana);
-                setNextAudio(audio);
-            };
-            prepareFirstAudio();
+                if (firstKanji?.voice) {
+                    const audio = await prepareAudio(firstKanji.voice);
+                    if (isMounted && audio) {
+                        setNextAudio(audio);
+                    }
+                }
+            }
+        };
+
+        initializeTraining();
+        return () => {
+            isMounted = false;
+        };
+    }, [state.remainingRepetitions, state.isTraining]);
+
+    // 次の音声を準備
+    const prepareNextAudio = async () => {
+        if (state.currentKanjiIndex < remainingKanji.length - 1) {
+            try {
+                const nextKanjiIndex = remainingKanji[state.currentKanjiIndex + 1];
+                const nextKanji = state.kanjiList[nextKanjiIndex];
+                if (nextKanji?.voice) {
+                    const audio = await prepareAudio(nextKanji.voice);
+                    setNextAudio(audio);
+                }
+            } catch (error) {
+                console.error('次の音声の準備中にエラーが発生:', error);
+                setNextAudio(null);
+            }
         }
-    }, [state.remainingRepetitions]);
+    };
+
+    // 個人モードでの漢字クリック処理
+    const handleKanjiClick = async () => {
+        if (state.mode === "individual" && !isKanjiClicked && !isPlaying) {
+            setIsKanjiClicked(true);
+            try {
+                const audioToPlay = await prepareAudio(currentKanji.voice);
+                if (audioToPlay) {
+                    await playAudio(audioToPlay);
+                    setHasPlayedAudio(true);
+                } else {
+                    setTimeout(() => {
+                        setShowImage(true);
+                        setHasPlayedAudio(true);
+                    }, 800);
+                }
+            } catch (error) {
+                setTimeout(() => {
+                    setShowImage(true);
+                    setHasPlayedAudio(true);
+                }, 800);
+            }
+        }
+    };
 
     // 漢字表示の更新処理
     useEffect(() => {
@@ -140,29 +198,39 @@ export const Training = ({
         setCurrentKanji(current);
         setShowImage(false);
         setHasPlayedAudio(false);
+        setIsKanjiClicked(false);
+
+        if (state.mode === "individual") {
+            setKanjiPosition(getRandomPosition());
+            setShowKanji(true);
+        } else {
+            setShowKanji(false);
+        }
 
         const initializeKanji = async () => {
             if (state.selectedOption === "remember") {
-                // 次の音声がすでに準備されている場合
-                if (nextAudio) {
-                    setShowKanji(true);  // 音声が準備済みなのですぐに表示
-                    await playAudio(nextAudio);
-                    setHasPlayedAudio(true);
-                    setNextAudio(null);
-                } else {
-                    // 音声が準備されていない場合（主に1文字目）
-                    setShowKanji(false);
-                    const audioToPlay = await prepareAudio(current.yomigana);
-                    if (audioToPlay) {
-                        setTimeout(() => setShowKanji(true), 500);
-                        await playAudio(audioToPlay);
+                if (state.mode === "group") {
+                    if (nextAudio) {
+                        if (state.currentKanjiIndex === 0) {
+                            await new Promise(resolve => setTimeout(resolve, 1000));
+                        }
+                        await playAudio(nextAudio);
                         setHasPlayedAudio(true);
+                        setNextAudio(null);
                     } else {
-                        setShowKanji(true);  // 音声生成に失敗した場合でも漢字は表示
+                        const audioToPlay = await prepareAudio(current.voice);
+                        if (audioToPlay) {
+                            if (state.currentKanjiIndex === 0) {
+                                await new Promise(resolve => setTimeout(resolve, 1000));
+                            }
+                            await playAudio(audioToPlay);
+                            setHasPlayedAudio(true);
+                        } else {
+                            setTimeout(initializeKanji, 500);
+                            return;
+                        }
                     }
                 }
-
-                // 次の音声を準備
                 prepareNextAudio();
             } else {
                 setShowKanji(true);
@@ -172,14 +240,46 @@ export const Training = ({
         initializeKanji();
     }, [state.currentKanjiIndex, remainingKanji]);
 
-    // 自動進行処理
+    // 集団モード（自動進行処理）
     useEffect(() => {
         let timer;
-        if (state.selectedOption === "remember" && showImage && hasPlayedAudio) {
-            timer = setTimeout(handleMemorizingNext, 3500);
+        if (state.mode === "group" && state.selectedOption === "remember" && showImage && hasPlayedAudio) {
+            timer = setTimeout(() => {
+                setShowBlackScreen(true);
+                setTimeout(() => {
+                    handleMemorizingNext();
+                    setShowBlackScreen(false);
+                }, 500);
+            }, 2000);
         }
         return () => timer && clearTimeout(timer);
     }, [showImage, hasPlayedAudio]);
+
+    // 個人モード(画像表示後の処理)
+    useEffect(() => {
+        let timer;
+        if (state.mode === "individual" && showImage) {
+            timer = setTimeout(() => {
+                setShowBlackScreen(true);
+                setTimeout(() => {
+                    setShowImage(false);
+                    setShowKanji(true);
+                    setIsKanjiClicked(false);
+                    setShowBlackScreen(false);
+                    if (state.currentKanjiIndex >= remainingKanji.length - 1) {
+                        if (state.remainingRepetitions > 1) {
+                            updateRepetition({ remainingRepetitions: state.remainingRepetitions - 1 });
+                        } else {
+                            StateTransitions.COMPLETE_TRAINING(updateFunctions);
+                        }
+                    } else {
+                        updateKanji({ currentKanjiIndex: state.currentKanjiIndex + 1 });
+                    }
+                }, 500);
+            }, 2000);
+        }
+        return () => timer && clearTimeout(timer);
+    }, [showImage]);
 
     // 次の漢字への移動処理
     const handleMemorizingNext = () => {
@@ -188,7 +288,7 @@ export const Training = ({
             if (state.remainingRepetitions > 1) {
                 updateRepetition({ remainingRepetitions: state.remainingRepetitions - 1 });
             } else {
-                updateKanji({ isTraining: "complete", currentKanjiIndex: 0 });
+                StateTransitions.COMPLETE_TRAINING(updateFunctions);
             }
         } else {
             updateKanji({ currentKanjiIndex: state.currentKanjiIndex + 1 });
@@ -201,15 +301,15 @@ export const Training = ({
             updateKanji({ currentKanjiIndex: state.currentKanjiIndex + 1 });
         } else {
             if (state.remainingRepetitions > 1) {
-                // シャッフルして再度開始
                 const shuffled = [...remainingKanji].sort(() => Math.random() - 0.5);
                 setRemainingKanji(shuffled);
                 updateKanji({ currentKanjiIndex: 0 });
                 updateRepetition({ remainingRepetitions: state.remainingRepetitions - 1 });
             } else {
-                updateKanji({ isTraining: "initial", currentKanjiIndex: 0 });
-                updateRepetition({ repetitionCount: "initial" });
-                updateNavigation({ selectedLevel: "initial", selectedOption: "initial", selectNext: false });
+                StateTransitions.COMPLETE_TRAINING(updateFunctions);
+                if (state.confirmationCount === "initial") {
+                    StateTransitions.RESET_GROUP_MODE_STATE(updateFunctions);
+                }
             }
         }
     };
@@ -219,7 +319,7 @@ export const Training = ({
         if (state.selectedOption === "read") {
             const handleKeyPress = (event) => {
                 if (event.key === "Enter") {
-                    event.preventDefault();  // デフォルトの動作を防止
+                    event.preventDefault();
                     handleReadingNext();
                 }
             };
@@ -228,26 +328,64 @@ export const Training = ({
         }
     }, [state.selectedOption, state.currentKanjiIndex, remainingKanji, state.remainingRepetitions]);
 
+    // コンポーネントのクリーンアップ
+    useEffect(() => {
+        return () => {
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio.currentTime = 0;
+            }
+        };
+    }, []);
+
+    // スタイルの設定
+    const containerClassName = state.mode === "group" ? styles['container--group'] : styles.container;
+    const kanjiClassName = state.mode === "individual" ? styles['kanjiDisplay--individual'] : styles.kanjiDisplay;
+    const imageContainerClassName = state.mode === "individual" 
+        ? styles['imageContainer--individual'] 
+        : state.mode === "group" 
+            ? styles['imageContainer--group'] 
+            : styles.imageContainer;
+    const imageClassName = `${state.mode === "individual" ? styles['image--individual'] : styles['image--group']} ${showImage ? styles['image--visible'] : ''}`;
+
     return (
-        <div style={trainingContainerStyle}>
+        <div className={containerClassName}>
+            {showBlackScreen && <div className={`${styles.blackScreen} ${styles['blackScreen--visible']}`} />}
             {state.selectedOption === "read" ? (
-                <div style={kanjiDisplayStyle} onClick={handleReadingNext}>
+                <div className={styles.kanjiDisplay} onClick={handleReadingNext}>
                     {showKanji && currentKanji?.kanji}
                 </div>
             ) : (
                 <>
                     {!showImage ? (
-                        <div style={kanjiDisplayStyle}>
-                            {showKanji && currentKanji?.kanji}
-                        </div>
+                        state.mode === "individual" ? (
+                            <div 
+                                className={kanjiClassName}
+                                style={{
+                                    left: `${kanjiPosition.x}%`,
+                                    top: `${kanjiPosition.y}%`
+                                }}
+                                onClick={handleKanjiClick}
+                            >
+                                {showKanji && currentKanji?.kanji}
+                            </div>
+                        ) : (
+                            <div className={styles.kanjiDisplay}>
+                                {showKanji && currentKanji?.kanji}
+                            </div>
+                        )
                     ) : (
-                        currentKanji?.illust && <img 
-                            src={currentKanji.illust.default || currentKanji.illust} 
-                            alt={`${currentKanji?.kanji}のイラスト`}
-                            style={imageVisibleStyle}
-                            onLoad={() => setShowImage(true)}
-                            onError={(e) => e.target.style.display = 'none'}
-                        />
+                        <div className={imageContainerClassName}>
+                            {currentKanji?.illust && (
+                                <img 
+                                    src={currentKanji.illust.default || currentKanji.illust} 
+                                    alt={`${currentKanji?.kanji}のイラスト`}
+                                    className={imageClassName}
+                                    onLoad={() => setShowImage(true)}
+                                    onError={(e) => e.target.style.display = 'none'}
+                                />
+                            )}
+                        </div>
                     )}
                 </>
             )}

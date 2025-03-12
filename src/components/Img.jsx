@@ -1,11 +1,8 @@
 import React from 'react';
-
-// メニュー画像のインポート
 import menuImage from '../Images/Menu1.png';
+import endImage from '../Images/end.png';
+import { StateCheckers } from '../utils/stateManager';
 
-/**
- * スタイル定義
- */
 const imgStyle = {
   width: "500px",                 // 画像の幅
   borderRadius: "8px",            // 画像の角を丸く
@@ -22,6 +19,15 @@ const containerStyle = {
   width: "100%",                  // 親コンテナを100%幅に
 };
 
+// 終了画面用の中央配置スタイル
+const endContainerStyle = {
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  width: "100%",
+  marginTop: "20px",
+};
+
 /**
  * イメージコンポーネント
  * 画面状態に応じて適切な画像やラベルを表示する
@@ -31,7 +37,8 @@ const containerStyle = {
 export const Img = ({ state }) => {
   return (
     <>
-      {(state.mode === "initial" || state.selectedOption === "initial") && (
+      {/* メニュー画面の画像 */}
+      {StateCheckers.isMainMenuScreen(state) && (
         <div style={containerStyle}>
           <img
             src={menuImage}
@@ -41,12 +48,21 @@ export const Img = ({ state }) => {
         </div>
       )}
 
+      {/* たしかめよう！の学習終了後の画像 */}
+      {StateCheckers.isEndScreen(state) && (
+        <div style={endContainerStyle}>
+          <img
+            src={endImage}
+            alt="終了画像"
+            style={imgStyle}
+          />
+        </div>
+      )}
+
       {/* 漢字選択画面の場合、レベル表示 */}
-      {state.selectedOption !== "initial" && 
-       state.selectedLevel !== "initial" && 
-       !state.selectNext && (
+      {StateCheckers.isKanjiSelection(state) && (
         <div style={labelStyle}>
-          <h2>レベル{state.selectedLevel}</h2>
+          <h1>レベル{state.selectedLevel}</h1>
         </div>
       )}
     </>

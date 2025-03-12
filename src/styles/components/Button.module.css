@@ -1,0 +1,50 @@
+.button {
+  width: var(--button-width-normal);
+  height: var(--button-height);
+  font-size: var(--font-size-large);
+  border: none;
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  margin: var(--spacing-xs);
+  transition: opacity 0.3s ease;
+  background-color: var(--color-primary);
+  color: var(--color-white);
+}
+
+.button:hover {
+  opacity: 0.8;
+}
+
+/* バリアント */
+.button--primary {
+  background-color: var(--color-primary);
+  color: var(--color-white);
+}
+
+.button--small {
+  width: var(--button-width-small);
+  margin: var(--spacing-sm);
+  background-color: var(--color-primary);
+  color: var(--color-white);
+}
+
+/* レイアウト */
+.buttonContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.buttonGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--grid-gap);
+  width: var(--grid-column-width);
+}
+
+.buttonColumn {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+} 

@@ -1,37 +1,110 @@
-import React, { useState } from "react";
+import React from "react";
+import { StateCheckers, StateTransitions, KanjiHelpers } from "../utils/stateManager";
+import styles from '../styles/components/Navi.module.css';
 
-const naviContainerStyle = {
-    height: "50px",
-    backgroundColor: "#ddd",
-    display: "flex",                // Flexboxを使用
-    justifyContent: "space-between", // 両端に配置
-    alignItems: "center",           // 垂直方向中央揃え
-    padding: "0 20px",              // 左右の余白
-};
+/**
+ * ナビゲーションの状態に基づいてボタンの設定を決定する
+ * @param {Object} state - アプリケーションの状態
+ * @param {Object} updateFunctions - 状態更新関数群
+ * @returns {Object} - 表示するボタンの設定
+ */
+const getNavigationConfig = (state, updateFunctions) => {
+    // 初期状態
+    if (StateCheckers.isInitialScreen(state)) {
+        return { showBackButton: false, showButtons: [] };
+    }
 
-const naviStyle = {
-    padding: "10px 20px",
-    backgroundColor: "#ddd",
-    fontSize: "16px",
-    color: "blue",
-    border: "none",
-    cursor: "pointer",
-};
+    // 練習方法選択画面
+    if (StateCheckers.isLearningMethodSelection(state)) {
+        return {
+            showBackButton: false,
+            showButtons: [{
+                text: "モード選択へ戻る",
+                onClick: () => StateTransitions.RETURN_TO_START(updateFunctions)
+            }]
+        };
+    }
 
-const naviLeftStyle = {
-    ...naviStyle,                   // naviStyleの設定を継承
-    marginRight: "auto",            // 左寄せ
-};
+    // レベル選択画面
+    if (StateCheckers.isLevelSelection(state)) {
+        return {
+            showBackButton: false,
+            showButtons: [{
+                text: "TOPへ",
+                onClick: () => StateTransitions.RETURN_TO_METHOD_SELECTION(updateFunctions)
+            }]
+        };
+    }
 
-const naviRightContainerStyle = {
-    display: "flex",                // Flexboxを使用
-    gap: "10px",                    // ボタン間の間隔
-    marginLeft: "20px",             // 左側（戻るボタン）との間隔
-};
+    // 漢字選択画面
+    if (StateCheckers.isKanjiSelection(state)) {
+        return {
+            showBackButton: true,
+            backButtonAction: () => StateTransitions.RETURN_TO_LEVEL_SELECTION(updateFunctions),
+            showButtons: [
+                {
+                    text: "選択解除",
+                    onClick: () => StateTransitions.CLEAR_KANJI_SELECTION(updateFunctions, state.selectedLevel)
+                },
+                {
+                    text: "次へ",
+                    onClick: () => {
+                        const selectedCount = KanjiHelpers.getSelectedKanjiCount(state);
+                        if (selectedCount > 0) {
+                            StateTransitions.PROCEED_TO_NEXT(updateFunctions);
+                        }
+                    }
+                },
+                {
+                    text: "TOPへ",
+                    onClick: () => StateTransitions.RETURN_TO_METHOD_SELECTION(updateFunctions)
+                }
+            ]
+        };
+    }
 
-const naviRightStyle = {
-    ...naviStyle,                   // naviStyleの設定を継承
-    padding: "10px 15px",           // 横幅を少し調整
+    // 反復回数選択画面
+    if (StateCheckers.isRepetitionSelection(state)) {
+        return {
+            showBackButton: true,
+            backButtonAction: () => updateFunctions.updateNavigation({ selectNext: false }),
+            showButtons: [{
+                text: "TOPへ",
+                onClick: () => StateTransitions.RETURN_TO_METHOD_SELECTION(updateFunctions)
+            }]
+        };
+    }
+
+    // 確認回数選択画面
+    if (StateCheckers.isConfirmationSelection(state)) {
+        return {
+            showBackButton: true,
+            backButtonAction: () => {
+                updateFunctions.updateNavigation({ selectNext: false });
+                updateFunctions.updateRepetition({
+                    repetitionCount: "initial",
+                    remainingRepetitions: 0
+                });
+            },
+            showButtons: [{
+                text: "TOPへ",
+                onClick: () => StateTransitions.RETURN_TO_METHOD_SELECTION(updateFunctions)
+            }]
+        };
+    }
+
+    // おぼえよう！の学習終了後の画面
+    if (StateCheckers.isMemorizeComplete(state)) {
+        return {
+            showBackButton: false,
+            showButtons: [{
+                text: "TOPへ",
+                onClick: () => StateTransitions.RETURN_TO_START(updateFunctions)
+            }]
+        };
+    }
+
+    return { showBackButton: false, showButtons: [] };
 };
 
 /**
@@ -51,146 +124,50 @@ export const Navi = ({
     updateRepetition,
     handleRemoveKanjiSelection
 }) => {
+    const updateFunctions = {
+        updateNavigation,
+        updateKanji,
+        updateRepetition,
+        handleRemoveKanjiSelection
+    };
+
+    // ナビゲーションバーを表示すべきでない場合は何も表示しない
+    if (!StateCheckers.shouldShowNavigation(state)) {
+        return null;
+    }
+
+    const config = getNavigationConfig(state, updateFunctions);
+
     return (
-        <div style={naviContainerStyle}>
-            {/* 初期画面では何も表示しない */}
-            {state.mode === "initial" && (
-                <div></div>
-            )}
-
-            {/* 練習方法選択画面のモード選択へ戻るボタン */}
-            {state.mode !== "initial" && state.selectedOption === "initial" && state.selectedLevel === "initial" && (
-                <>
-                    <div></div>
-                    <div style={naviRightContainerStyle}>
-                        <button 
-                            style={naviRightStyle} 
-                            onClick={() => updateNavigation({ mode: "initial" })}
-                        >
-                            モード選択へ戻る
-                        </button>
-                    </div>
-                </>
-            )}
-
-            {/* レベル選択画面のTOPへボタン */}
-            {state.mode !== "initial" && state.selectedOption !== "initial" && state.selectedLevel === "initial" && (
-                <>
-                    <div></div>
-                    <div style={naviRightContainerStyle}>
-                        <button 
-                            style={naviRightStyle} 
-                            onClick={() => updateNavigation({ selectedOption: "initial" })}
-                        >
-                            TOPへ
-                        </button>
-                    </div>
-                </>
-            )}
-
-            {/* 漢字選択画面の各種ボタン */}
-            {!state.selectNext && state.selectedOption !== "initial" && state.selectedLevel !== "initial" && (
-                <>
+        <div className={styles.container}>
+            {/* 左側：戻るボタン */}
+            <div className={styles.leftButtons}>
+                {config.showBackButton && (
                     <button 
-                        style={naviLeftStyle} 
-                        onClick={() => updateNavigation({ selectedLevel: "initial" })}
+                        className={styles.button}
+                        onClick={config.backButtonAction}
                     >
                         ＜戻る
                     </button>
-                    <div style={naviRightContainerStyle}>
-                        <button 
-                            style={naviRightStyle} 
-                            onClick={handleRemoveKanjiSelection}
-                        >
-                            選択解除
-                        </button>
-                        <button 
-                            style={naviRightStyle}
-                            onClick={() => {
-                                const level = state.selectedLevel;
-                                const selectedCount = state.selectedKanji[level]?.length || 0;
-                                if (selectedCount > 0) {
-                                    updateNavigation({ selectNext: true });
-                                }
-                            }}
-                        >
-                            次へ
-                        </button>
-                        <button 
-                            style={naviRightStyle} 
-                            onClick={() => {
-                                updateNavigation({
-                                    selectedOption: "initial",
-                                    selectedLevel: "initial",
-                                    selectNext: false
-                                });
-                            }}
-                        >
-                            TOPへ
-                        </button>
+                )}
+            </div>
+
+            {/* 右側：その他のボタン群 */}
+            <div className={styles.rightButtons}>
+                {config.showButtons && config.showButtons.length > 0 && (
+                    <div className={styles.buttonContainer}>
+                        {config.showButtons.map((button, index) => (
+                            <button
+                                key={index}
+                                className={styles.button}
+                                onClick={button.onClick}
+                            >
+                                {button.text}
+                            </button>
+                        ))}
                     </div>
-                </>
-            )}
-
-            {/* 反復回数選択画面の戻るボタン */}
-            {state.repetitionCount === "initial" && state.selectNext && (
-                <>
-                    <button 
-                        style={naviLeftStyle} 
-                        onClick={() => {
-                            updateNavigation({ selectNext: false });
-                        }}
-                    >
-                        ＜戻る
-                    </button>
-                </>
-            )}
-
-            {/* 確かめよう回数選択画面の戻るボタン */}
-            {state.selectedOption === "remember" && state.repetitionCount !== "initial" && state.selectNext && state.confirmationCount === "initial" && (
-                <>
-                    <button 
-                        style={naviLeftStyle} 
-                        onClick={() => {
-                            updateNavigation({ selectNext: false });
-                        }}
-                    >
-                        ＜戻る
-                    </button>
-                </>
-            )}
-
-            {/* おぼえよう！の学習終了後の戻るボタン */}
-            {state.selectedOption === "remember" && state.isTraining === "complete" && (
-                <>
-                <div style={naviRightContainerStyle}>
-                    <button 
-                        style={naviRightStyle} 
-                        onClick={() => {
-                            updateNavigation({
-                                //mode: "initial",
-                                selectedOption: "initial",
-                                selectedLevel: "initial",
-                                selectNext: false,
-                            });
-                            updateKanji({
-                                currentKanjiIndex: 0,
-                                kanjiList: [],
-                                isTraining: "initial",
-                            });
-                            updateRepetition({
-                                remainingRepetitions: 0,
-                                repetitionCount: "initial",
-                                remainingConfirmation: 0,
-                                confirmationCount: "initial",
-                            });
-                        }}
-                    >
-                        TOPへ
-                    </button>
-                </div>
-                </>
-            )}
+                )}
+            </div>
         </div>
     );
 };

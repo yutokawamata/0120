@@ -1,0 +1,63 @@
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: center;
+  position: relative;
+}
+
+.tableContainer {
+  max-height: calc(100vh - 300px);
+  overflow-y: auto;
+  position: relative;
+  width: 100%;
+}
+
+.header {
+  background-color: var(--color-background);
+  padding: var(--spacing-sm);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.cell {
+  padding: var(--spacing-sm);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.checkCell {
+  composes: cell;
+  width: 20px;
+  text-align: center;
+}
+
+.row {
+  cursor: pointer;
+}
+
+.row:hover {
+  background-color: var(--color-background);
+}
+
+.row--selected {
+  background-color: var(--color-background);
+}
+
+.startScreen {
+  text-align: center;
+}
+
+.startScreen h1 {
+  margin-bottom: var(--spacing-lg);
+}
+
+.startScreen span {
+  color: red;
+}
+
+.buttonGroup {
+  display: flex;
+  justify-content: center;
+  gap: var(--spacing-lg);
+} 

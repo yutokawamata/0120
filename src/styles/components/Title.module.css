@@ -1,0 +1,17 @@
+.title {
+  width: 100%;
+  max-width: var(--container-width);
+  height: 60px;
+  padding: var(--spacing-sm);
+  margin: var(--spacing-md);
+  font-size: var(--font-size-xlarge);
+  border-radius: var(--border-radius-md);
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.title h3 {
+  margin: 0;
+  padding: 0;
+  font-weight: normal;
+} 

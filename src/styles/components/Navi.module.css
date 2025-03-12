@@ -1,0 +1,38 @@
+.container {
+  height: 50px;
+  background-color: var(--color-background);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 var(--spacing-lg);
+}
+
+.button {
+  padding: var(--spacing-md) var(--spacing-lg);
+  background-color: var(--color-background);
+  font-size: var(--font-size-medium);
+  color: blue;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.3s ease;
+}
+
+.button:hover {
+  opacity: 0.8;
+}
+
+.leftButtons {
+  display: flex;
+  align-items: center;
+}
+
+.rightButtons {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.buttonContainer {
+  display: flex;
+  gap: var(--spacing-md);
+}
