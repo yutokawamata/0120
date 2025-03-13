@@ -185,7 +185,7 @@ export const Menu = ({
         {StateCheckers.isMemorizeStartScreen(state) && (
           <div className={styles.startScreen}>
             <h1>かんじを<span>おぼえよう</span></h1>
-            <Button onClick={() => StateTransitions.START_TRAINING(updateFunctions)}>
+            <Button onClick={() => StateTransitions.START_TRAINING(updateFunctions, { repetitionCount: state.repetitionCount })}>
               スタート
             </Button>
           </div>
@@ -194,10 +194,13 @@ export const Menu = ({
         {/* おぼえよう！の学習終了後のボタン */}
         {StateCheckers.isMemorizeComplete(state) && (
           <div className={styles.buttonGroup}>
-            <Button onClick={() => StateTransitions.START_TRAINING(updateFunctions)}>
+            <Button onClick={() => StateTransitions.START_TRAINING(updateFunctions, { repetitionCount: state.repetitionCount })}>
               もういちど
             </Button>
-            <Button onClick={() => StateTransitions.TRANSITION_TO_CONFIRM(updateFunctions)}>
+            <Button onClick={() => StateTransitions.TRANSITION_TO_CONFIRM(updateFunctions, { 
+              confirmationCount: state.confirmationCount,
+              repetitionCount: state.repetitionCount 
+            })}>
               たしかめよう
             </Button>
           </div>
@@ -209,7 +212,7 @@ export const Menu = ({
             <Button onClick={() => StateTransitions.RETURN_TO_MEMORIZE(updateFunctions, state)}>
               もういちど　おぼえよう
             </Button>
-            <Button onClick={() => StateTransitions.RETURN_TO_START(updateFunctions)}>
+            <Button onClick={() => StateTransitions.RETURN_TO_METHOD_SELECTION(updateFunctions)}>
               はじめにもどる
             </Button>
           </div>

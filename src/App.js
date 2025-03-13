@@ -5,7 +5,7 @@ import { Img } from "./components/Img";
 import { Title } from "./components/Title";
 import { Training } from "./components/Training";
 import { StateCheckers } from "./utils/stateManager";
-import './App.css';
+import styles from './App.module.css';
 
 // CSVファイルを一括インポート
 function importCSV(r) {
@@ -173,82 +173,6 @@ export const App = () => {
     });
   };
 
-  // スタイル定義
-  const styles = {
-    container: {
-      display: "flex",
-      justifyContent: "center",
-      alignItems: "center",
-      gap: "50px",
-      maxWidth: "1000px",
-      margin: "0 auto",
-      padding: "20px",
-    },
-    title: {
-      display: "flex",
-      justifyContent: "center",
-      alignItems: "center",
-      maxWidth: "1000px",
-      margin: "0 auto",
-      padding: "10px",
-      marginTop: "50px",
-      marginBottom: "60px",
-    },
-    navi: {
-      position: "fixed",
-      top: 0,
-      width: "100%",
-      backgroundColor: "white",
-      zIndex: 1000,
-      boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
-    },
-    endScreen: {
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      gap: "20px",
-      padding: "20px",
-      maxWidth: "1000px",
-      margin: "0 auto",
-      marginTop: "50px"
-    },
-    endScreenImage: {
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      width: "500px",
-      height: "auto"
-    },
-    endScreenButtons: {
-      marginTop: "40px"
-    },
-    trainingContainer: {
-      display: "flex",
-      justifyContent: "center",
-      width: "100%",
-      maxWidth: "1200px",
-      margin: "0 auto",
-      padding: "20px",
-      minHeight: "100vh",
-    },
-    groupTrainingContainer: {
-      display: "flex",
-      justifyContent: "center",
-      alignItems: "center",
-      width: "100%",
-      maxWidth: "100vw",
-      margin: "0 auto",
-      padding: "0",
-      minHeight: "100vh",
-      position: "fixed",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundColor: "#fff",
-    }
-  };
-
   const state = { ...navigationState, ...kanjiState, ...repetitionState };
   const updateFunctions = {
     updateNavigation: updateNavigationState,
@@ -259,12 +183,12 @@ export const App = () => {
 
   // 学習中の表示
   if (StateCheckers.isTraining(state)) {
-    const containerStyle = state.mode === "individual" 
+    const containerClassName = state.mode === "individual" 
       ? styles.trainingContainer 
       : styles.groupTrainingContainer;
 
     return (
-      <div style={containerStyle}>
+      <div className={containerClassName}>
         <Training 
           state={state}
           {...updateFunctions}
@@ -278,12 +202,12 @@ export const App = () => {
   // たしかめよう！終了画面の表示
   if (StateCheckers.isEndScreen(state)) {
     return (
-      <div style={styles.endScreen}>
+      <div className={styles.endScreen}>
         <Title state={state} {...updateFunctions} />
-        <div style={styles.endScreenImage}>
+        <div className={styles.endScreenImage}>
           <Img state={state} {...updateFunctions} />
         </div>
-        <div style={styles.endScreenButtons}>
+        <div className={styles.endScreenButtons}>
           <Menu 
             state={state}
             {...updateFunctions}
@@ -298,19 +222,19 @@ export const App = () => {
   // 通常画面の表示
   return (
     <>
-      <div style={styles.navi}>
+      <div className={styles.navi}>
         <Navi
           state={state}
           {...updateFunctions}
         />
       </div>
-      <div style={styles.title}>
+      <div className={styles.title}>
         <Title 
           state={state}
           {...updateFunctions}
         />
       </div>
-      <div style={styles.container}>
+      <div className={styles.container}>
         <Img
           state={state}
           {...updateFunctions}

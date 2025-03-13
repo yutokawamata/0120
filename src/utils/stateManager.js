@@ -71,34 +71,10 @@ export const StateTransitions = {
     });
   },
 
-   // 集団モードに戻る
-   RETURN_TO_GROUP_MODE: (updateFunctions) => {
-    const { updateNavigation, updateKanji, updateRepetition } = updateFunctions;
-    updateNavigation({
-      mode: "group",
-      selectedOption: "initial",
-      selectedLevel: "initial",
-      selectNext: false
-    });
-    updateRepetition({
-      repetitionCount: "initial",
-      remainingRepetitions: 0,
-      confirmationCount: "initial",
-      remainingConfirmation: 0
-    });
-    updateKanji({
-      selectedKanji: {},
-      kanjiList: [],
-      currentKanjiIndex: 0,
-      isTraining: "initial"
-    });
-  },
-
-     // 個別モードに戻る
-     RETURN_TO_INDIVIDUAL_MODE: (updateFunctions) => {
+     // 学習方法選択画面に戻る
+     RETURN_TO_METHOD_SELECTION: (updateFunctions) => {
       const { updateNavigation, updateKanji, updateRepetition } = updateFunctions;
       updateNavigation({
-        mode: "individual",
         selectedOption: "initial",
         selectedLevel: "initial",
         selectNext: false
@@ -118,16 +94,31 @@ export const StateTransitions = {
     },
 
   // たしかめよう！モードに移行
-  TRANSITION_TO_CONFIRM: (updateFunctions) => {
-    const { updateNavigation, updateKanji } = updateFunctions;
-    updateKanji({ isTraining: "training" });
+  TRANSITION_TO_CONFIRM: (updateFunctions, state) => {
+    const { updateNavigation, updateKanji, updateRepetition } = updateFunctions;
+    updateKanji({ isTraining: "training", currentKanjiIndex: 0 });
     updateNavigation({ selectedOption: "read" });
+    if (state && state.confirmationCount && state.repetitionCount) {
+      // 反復回数 × たしかめよう回数 を設定
+      const totalConfirmations = parseInt(state.repetitionCount) * parseInt(state.confirmationCount);
+      updateRepetition({
+        remainingConfirmation: totalConfirmations
+      });
+    }
   },
 
   // 学習を開始
-  START_TRAINING: (updateFunctions) => {
-    const { updateKanji } = updateFunctions;
-    updateKanji({ isTraining: "training" });
+  START_TRAINING: (updateFunctions, state) => {
+    const { updateKanji, updateRepetition } = updateFunctions;
+    updateKanji({ isTraining: "training",currentKanjiIndex: 0});
+    // 反復回数を設定
+    if (state && state.repetitionCount) {
+      updateRepetition({
+        remainingRepetitions: parseInt(state.repetitionCount)
+      });
+    } else {
+      console.warn('反復回数が設定されていません');
+    }
   },
 
   // レベル選択に戻る

@@ -99,7 +99,7 @@ const getNavigationConfig = (state, updateFunctions) => {
             showBackButton: false,
             showButtons: [{
                 text: "TOPへ",
-                onClick: () => StateTransitions.RETURN_TO_START(updateFunctions)
+                onClick: () => StateTransitions.RETURN_TO_METHOD_SELECTION(updateFunctions)
             }]
         };
     }
