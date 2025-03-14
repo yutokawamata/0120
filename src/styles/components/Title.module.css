@@ -3,11 +3,14 @@
   max-width: var(--container-width);
   height: 60px;
   padding: var(--spacing-sm);
-  margin: var(--spacing-md);
+  margin: var(--spacing-md) auto;
   font-size: var(--font-size-xlarge);
   border-radius: var(--border-radius-md);
   text-align: center;
   box-sizing: border-box;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .title h3 {

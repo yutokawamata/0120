@@ -10,8 +10,8 @@
 
   /* フォントサイズ */
   --font-size-small: 16px;
-  --font-size-medium: 18px;
-  --font-size-large: 22px;
+  --font-size-medium: 20px;
+  --font-size-large: 24px;
   --font-size-xlarge: 48px;
 
   /* スペーシング */
@@ -26,14 +26,14 @@
   --border-radius-md: 8px;
   --container-width: 1000px;
   --container-width-large: 1200px;
-  --button-width-normal: 300px;
-  --button-width-small: 200px;
-  --button-height: 50px;
+  --button-width-normal: 340px;
+  --button-width-small: 240px;
+  --button-height: 60px;
   --nav-height: 50px;
 
   /* グリッド */
-  --grid-gap: 10px;
-  --grid-column-width: 520px;
+  --grid-gap: 15px;
+  --grid-column-width: 600px;
 
   /* アニメーション */
   --transition-speed: 0.3s;

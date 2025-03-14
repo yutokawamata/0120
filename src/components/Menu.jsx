@@ -4,6 +4,22 @@ import { Button, ButtonContainer, ButtonGrid, ButtonColumn } from './Button.jsx'
 import styles from '../styles/components/Menu.module.css';
 
 /**
+ * バージョン情報を表示するコンポーネント
+ */
+const VersionInfo = () => {
+  // 最終更新日を表示
+  const today = new Date();
+  const dateStr = `${today.getFullYear()}${(today.getMonth() + 1).toString().padStart(2, '0')}${today.getDate().toString().padStart(2, '0')}`;
+  const versionNumber = "1"; // バージョン番号（更新時に手動で変更）
+  
+  return (
+    <div className={styles.versionInfo}>
+      <p>Ver.{dateStr}-{versionNumber}</p>
+    </div>
+  );
+};
+
+/**
  * メニューコンポーネント
  * モード選択、レベル選択、漢字選択、反復回数選択などの機能を提供
  */
@@ -51,14 +67,17 @@ export const Menu = ({
       <>
         {/* 初期モードのボタン */}
         {StateCheckers.isInitialScreen(state) && (
-          <ButtonContainer>
-            <Button onClick={() => updateNavigation({ mode: "group" })}>
-              集団モード
-            </Button>
-            <Button onClick={() => updateNavigation({ mode: "individual" })}>
-              個人モード
-            </Button>
-          </ButtonContainer>
+          <>
+            <ButtonContainer>
+              <Button onClick={() => updateNavigation({ mode: "group" })}>
+                集団モード
+              </Button>
+              <Button onClick={() => updateNavigation({ mode: "individual" })}>
+                個人モード
+              </Button>
+            </ButtonContainer>
+            <VersionInfo />
+          </>
         )}
   
         {/* よめるかな？・おぼえよう！のボタン */}
