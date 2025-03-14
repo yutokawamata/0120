@@ -69,7 +69,7 @@ export const Training = ({
                 return null;
             }
 
-            console.log('[音声準備] 音声ファイル読み込み開始');
+            console.log('[音声準備] 音声ファイル読み込み開始:', voiceFile);
             
             // ファイルパスを取得（default経由かどうかで処理を分ける）
             const audioSrc = voiceFile.default || voiceFile;
@@ -83,20 +83,44 @@ export const Training = ({
             
             // 音声の読み込み完了を待つ
             await new Promise((resolve, reject) => {
-                audio.addEventListener('loadeddata', () => {
-                    console.log('[音声準備] 音声データ読み込み完了');
+                // 既に読み込み済みの場合はすぐに解決
+                if (audio.readyState >= 2) {
+                    console.log('[音声準備] 音声データ既に読み込み済み');
                     resolve();
-                });
-                audio.addEventListener('error', (e) => {
+                    return;
+                }
+                
+                // 読み込みイベントのリスナー設定
+                const loadHandler = () => {
+                    console.log('[音声準備] 音声データ読み込み完了');
+                    audio.removeEventListener('canplaythrough', loadHandler);
+                    resolve();
+                };
+                
+                const errorHandler = (e) => {
                     console.error('[音声準備] 音声データ読み込みエラー', e);
-                    reject(e);
-                });
+                    audio.removeEventListener('error', errorHandler);
+                    // エラー時も続行できるようにrejectではなくresolveを呼ぶ
+                    resolve();
+                };
+                
+                audio.addEventListener('canplaythrough', loadHandler);
+                audio.addEventListener('error', errorHandler);
+                
+                // タイムアウト処理（5秒後に強制的に続行）
+                setTimeout(() => {
+                    console.warn('[音声準備] 音声読み込みタイムアウト、続行します');
+                    audio.removeEventListener('canplaythrough', loadHandler);
+                    audio.removeEventListener('error', errorHandler);
+                    resolve();
+                }, 5000);
             });
 
             console.log('[音声準備] 音声準備完了');
             return audio;
         } catch (error) {
             console.error('[音声準備] 音声データの準備中にエラーが発生:', error);
+            // エラーが発生しても学習を続行できるようにnullを返す
             return null;
         }
     };
@@ -522,12 +546,24 @@ export const Training = ({
             // 全ての漢字を表示し終えた場合
             if (state.remainingConfirmation > 1) {
                 // まだ確認回数が残っている場合、漢字をシャッフルして最初から
+                console.log(`[よめるかな] 確認回数を減らす: ${state.remainingConfirmation} -> ${state.remainingConfirmation - 1}`);
                 const shuffled = [...remainingKanji].sort(() => Math.random() - 0.5);
                 setRemainingKanji(shuffled);
                 updateKanji({ currentKanjiIndex: 0 });
                 updateRepetition({ remainingConfirmation: state.remainingConfirmation - 1 });
+            } else if (state.remainingRepetitions > 1) {
+                // 確認回数は終了したが、まだ反復回数が残っている場合
+                console.log(`[よめるかな] 反復回数を減らす: ${state.remainingRepetitions} -> ${state.remainingRepetitions - 1}, 確認回数をリセット: ${state.confirmationCount}`);
+                const shuffled = [...remainingKanji].sort(() => Math.random() - 0.5);
+                setRemainingKanji(shuffled);
+                updateKanji({ currentKanjiIndex: 0 });
+                updateRepetition({ 
+                    remainingRepetitions: state.remainingRepetitions - 1,
+                    remainingConfirmation: state.confirmationCount ? parseInt(state.confirmationCount) : 1
+                });
             } else {
-                // 全ての確認が終了した場合
+                // 全ての確認と反復が終了した場合
+                console.log('[よめるかな] 全ての確認と反復が終了');
                 StateTransitions.COMPLETE_TRAINING(updateFunctions);
                 // 集団モードで確認回数が設定されていない場合、学習方法選択に戻る
                 if (state.confirmationCount === "initial") {
@@ -584,6 +620,20 @@ export const Training = ({
     // イラスト表示のクラス名（表示/非表示の状態も含む）
     const imageClassName = `${state.mode === "individual" ? styles['image--individual'] : styles['image--group']} ${showImage ? styles['image--visible'] : ''}`;
 
+    // イラスト読み込みエラー時の処理
+    const handleImageError = (e) => {
+        console.error('[イラスト表示] 読み込みエラー');
+        e.target.style.display = 'none';
+        // イラストが読み込めなくても学習を続行できるようにする
+        setShowImage(true);
+    };
+
+    // イラスト読み込み完了時の処理
+    const handleImageLoad = () => {
+        console.log('[イラスト表示] 読み込み完了');
+        setShowImage(true);
+    };
+
     // ======== レンダリング ========
     return (
         <div className={containerClassName}>
@@ -625,8 +675,8 @@ export const Training = ({
                                     src={currentKanji.illust.default || currentKanji.illust} 
                                     alt={`${currentKanji?.kanji}のイラスト`}
                                     className={imageClassName}
-                                    onLoad={() => setShowImage(true)}
-                                    onError={(e) => e.target.style.display = 'none'}
+                                    onLoad={handleImageLoad}
+                                    onError={handleImageError}
                                 />
                             )}
                         </div>
