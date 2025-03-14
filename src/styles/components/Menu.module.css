@@ -73,7 +73,27 @@
 /* タブレットとモバイル向けのメディアクエリ */
 @media screen and (max-width: 1024px) {
   .startScreen h1 {
-    font-size: calc(var(--font-size-xlarge) * 1.1);
+    font-size: var(--font-size-xlarge);
+  }
+  
+  .tableContainer {
+    max-height: calc(95vh - 180px);
+  }
+}
+
+/* スマートフォン向けのメディアクエリ */
+@media screen and (max-width: 768px) {
+  .startScreen {
+    height: 40vh;
+    gap: var(--spacing-lg);
+  }
+  
+  .startScreen h1 {
+    margin-bottom: var(--spacing-lg);
+  }
+  
+  .tableContainer {
+    max-height: calc(95vh - 150px);
   }
 }
 
@@ -85,6 +105,14 @@
   display: flex;
   justify-content: center;
   gap: var(--spacing-lg);
+}
+
+.endScreen {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 50vh;
+  gap: var(--spacing-xl);
 }
 
 /* バージョン情報のスタイル */

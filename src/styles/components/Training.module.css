@@ -27,14 +27,14 @@
 
 /* 漢字表示スタイル */
 .kanjiDisplay {
-  font-size: min(200px, 40vw);
+  font-size: min(200px, 80vw);
   cursor: pointer;
   user-select: none;
   display: flex;
   justify-content: center;
   align-items: center;
   width: 90vw;
-  height: 60vh;
+  height: 70vh;
   margin: 0 auto;
   white-space: nowrap;
   overflow: hidden;
@@ -45,7 +45,7 @@
 
 .kanjiDisplay--individual {
   composes: kanjiDisplay;
-  font-size: min(40px, 20vw);
+  font-size: min(60px, 20vw);
   position: fixed;
   transform: translate(-50%, -50%);
   width: auto;
@@ -118,13 +118,13 @@
   }
   
   .kanjiDisplay {
-    font-size: min(150px, 40vw);
+    font-size: min(60px, 80vw);
     height: 50vh;
     width: 90vw;
   }
   
   .kanjiDisplay--individual {
-    font-size: min(40px, 35vw);
+    font-size: min(30px, 20vw);
     max-width: 90vw;
   }
   
@@ -143,8 +143,8 @@
   }
   
   .kanjiDisplay {
-    font-size: min(180px, 40vw);
-    height: 55vh;
+    font-size: min(140px, 80vw);
+    height: 60vh;
     width: 90vw;
   }
   
@@ -168,7 +168,7 @@
   }
   
   .kanjiDisplay {
-    font-size: min(220px, 35vw);
+    font-size: min(180px, 80vw);
     height: 60vh;
     width: 90vw;
   }

@@ -48,7 +48,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 500px;
+  width: 100%;
+  max-width: 500px;
   height: auto;
 }
 
@@ -90,4 +91,44 @@
   bottom: 0;
   background-color: #fff;
   overflow: hidden;
+}
+
+/* タブレット向けのメディアクエリ */
+@media screen and (max-width: 1024px) {
+  .container {
+    flex-direction: column;
+    gap: 30px;
+    padding: 15px;
+  }
+  
+  .title {
+    margin-top: 60px;
+    margin-bottom: 40px;
+  }
+  
+  .endScreen {
+    margin-top: 60px;
+  }
+}
+
+/* スマートフォン向けのメディアクエリ */
+@media screen and (max-width: 768px) {
+  .container {
+    gap: 20px;
+    padding: 10px;
+  }
+  
+  .title {
+    margin-top: 50px;
+    margin-bottom: 30px;
+  }
+  
+  .endScreen {
+    margin-top: 50px;
+    gap: 15px;
+  }
+  
+  .endScreenButtons {
+    margin-top: 30px;
+  }
 }

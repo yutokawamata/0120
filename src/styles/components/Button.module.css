@@ -58,4 +58,26 @@
   flex-direction: column;
   gap: var(--spacing-lg);
   align-items: center;
+}
+
+/* タブレット向けのメディアクエリ */
+@media screen and (max-width: 1024px) {
+  .buttonGrid {
+    width: 90%;
+    max-width: 500px;
+  }
+}
+
+/* スマートフォン向けのメディアクエリ */
+@media screen and (max-width: 768px) {
+  .buttonGrid {
+    grid-template-columns: 1fr;
+    width: 90%;
+    max-width: 300px;
+    gap: var(--spacing-md);
+  }
+  
+  .buttonContainer {
+    gap: var(--spacing-md);
+  }
 } 

@@ -17,4 +17,20 @@
   margin: 0;
   padding: 0;
   font-weight: normal;
+}
+
+/* タブレット向けのメディアクエリ */
+@media screen and (max-width: 1024px) {
+  .title {
+    height: 50px;
+    font-size: var(--font-size-xlarge);
+  }
+}
+
+/* スマートフォン向けのメディアクエリ */
+@media screen and (max-width: 768px) {
+  .title {
+    height: 40px;
+    font-size: var(--font-size-xlarge);
+  }
 } 

@@ -211,7 +211,7 @@ export const Menu = ({
 
         {/* おぼえよう！の学習終了後のボタン */}
         {StateCheckers.isMemorizeComplete(state) && (
-          <div className={styles.buttonGroup}>
+          <div className={styles.endScreen}>
             <Button onClick={() => StateTransitions.START_TRAINING(updateFunctions, { repetitionCount: state.repetitionCount })}>
               もういちど
             </Button>

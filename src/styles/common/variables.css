@@ -46,13 +46,30 @@
 /* タブレットとモバイル向けのメディアクエリ */
 @media screen and (max-width: 1024px) {
   :root {
-    --font-size-small: 20px;
-    --font-size-medium: 26px;
-    --font-size-large: 32px;
-    --font-size-xlarge: 56px;
+    --font-size-small: 16px;
+    --font-size-medium: 20px;
+    --font-size-large: 24px;
+    --font-size-xlarge: 42px;
     
-    --button-width-normal: 400px;
-    --button-width-small: 300px;
-    --button-height: 80px;
+    --button-width-normal: 320px;
+    --button-width-small: 240px;
+    --button-height: 60px;
+  }
+}
+
+/* スマートフォン向けのメディアクエリ */
+@media screen and (max-width: 768px) {
+  :root {
+    --font-size-small: 14px;
+    --font-size-medium: 18px;
+    --font-size-large: 22px;
+    --font-size-xlarge: 36px;
+    
+    --button-width-normal: 280px;
+    --button-width-small: 200px;
+    --button-height: 50px;
+    
+    --spacing-lg: 15px;
+    --spacing-xl: 30px;
   }
 } 

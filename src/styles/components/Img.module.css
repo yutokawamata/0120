@@ -1,0 +1,62 @@
+/* 画像コンテナのスタイル */
+.container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  max-width: var(--container-width);
+  margin: 0 auto;
+}
+
+/* 終了画面用の中央配置スタイル */
+.endContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  max-width: var(--container-width);
+  margin: 20px auto 0;
+}
+
+/* 画像のスタイル */
+.image {
+  width: 100%;
+  max-width: 500px;
+  height: auto;
+  border-radius: 8px;
+  object-fit: contain;
+}
+
+/* レベル表示ラベルのスタイル */
+.label {
+  width: 150px;
+}
+
+/* タブレット向けのメディアクエリ */
+@media screen and (max-width: 1024px) {
+  .image {
+    max-width: 400px;
+  }
+  
+  .label {
+    width: 120px;
+  }
+}
+
+/* スマートフォン向けのメディアクエリ */
+@media screen and (max-width: 768px) {
+  .container, .endContainer {
+    flex-direction: column;
+  }
+  
+  .image {
+    max-width: 90%;
+    margin: 0 auto;
+  }
+  
+  .label {
+    width: 100%;
+    text-align: center;
+    margin-bottom: 20px;
+  }
+} 

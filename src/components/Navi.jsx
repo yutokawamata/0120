@@ -66,6 +66,22 @@ const getNavigationConfig = (state, updateFunctions, showAlert) => {
                     onClick: () => {
                         const selectedCount = KanjiHelpers.getSelectedKanjiCount(state);
                         if (selectedCount > 0) {
+                            // 選択された漢字の画像をプリロード
+                            const selectedIndices = state.selectedKanji[state.selectedLevel] || [];
+                            if (selectedIndices.length > 0) {
+                                console.log('選択された漢字の画像をプリロード開始');
+                                selectedIndices.forEach(index => {
+                                    const kanjiData = state.kanjiList[index];
+                                    if (kanjiData && kanjiData.illust) {
+                                        const img = new Image();
+                                        const imgSrc = kanjiData.illust.default || kanjiData.illust;
+                                        img.src = imgSrc;
+                                        console.log(`漢字「${kanjiData.kanji}」の画像をプリロード: ${imgSrc}`);
+                                    }
+                                });
+                            }
+                            
+                            // 通常の遷移処理
                             StateTransitions.PROCEED_TO_NEXT(updateFunctions);
                         } else {
                             // 漢字が選択されていない場合、アラートを表示
