@@ -1,7 +1,7 @@
-const CACHE_NAME = 'kanji-challenge-v3';
-const STATIC_CACHE = 'static-cache-v3';
-const DYNAMIC_CACHE = 'dynamic-cache-v3';
-const RESOURCE_CACHE = 'resource-cache-v3';
+const CACHE_NAME = 'kanji-challenge-v4';
+const STATIC_CACHE = 'static-cache-v4';
+const DYNAMIC_CACHE = 'dynamic-cache-v4';
+const RESOURCE_CACHE = 'resource-cache-v4';
 
 // 静的リソースのキャッシュリスト
 const staticFilesToCache = [
@@ -66,6 +66,15 @@ self.addEventListener('fetch', event => {
   if (
     requestUrl.pathname.includes('/Kanji/Sound/') ||
     event.request.url.match(/\.(mp3|wav|ogg)$/i)
+  ) {
+    event.respondWith(cacheFirst(event.request, RESOURCE_CACHE));
+    return;
+  }
+  
+  // CSVファイルの処理（キャッシュファースト戦略）
+  if (
+    requestUrl.pathname.includes('/Kanji/CSV/') ||
+    event.request.url.match(/\.(csv)$/i)
   ) {
     event.respondWith(cacheFirst(event.request, RESOURCE_CACHE));
     return;
@@ -156,10 +165,10 @@ self.addEventListener('message', event => {
     console.log('[Service Worker] リソースの事前キャッシュを開始します');
     
     // 画像と音声ファイルのURLリストを受け取る
-    const { imageUrls, audioUrls } = event.data;
+    const { imageUrls, audioUrls, csvUrls } = event.data;
     
     // リソースをキャッシュする
-    cacheResources(imageUrls, audioUrls)
+    cacheResources(imageUrls, audioUrls, csvUrls)
       .then(() => {
         // キャッシュ完了をクライアントに通知
         if (event.source) {
@@ -183,8 +192,35 @@ self.addEventListener('message', event => {
 });
 
 // リソースをキャッシュする関数
-async function cacheResources(imageUrls, audioUrls) {
+async function cacheResources(imageUrls, audioUrls, csvUrls) {
   const cache = await caches.open(RESOURCE_CACHE);
+  
+  // CSVファイルをキャッシュ（最優先）
+  if (csvUrls && csvUrls.length) {
+    console.log(`[Service Worker] ${csvUrls.length}個のCSVファイルをキャッシュします`);
+    const csvPromises = csvUrls.map(async url => {
+      try {
+        // キャッシュに既に存在するか確認
+        const existingResponse = await cache.match(url);
+        if (existingResponse) {
+          console.log(`[Service Worker] CSVは既にキャッシュ済み: ${url}`);
+          return;
+        }
+        
+        // キャッシュに存在しない場合はフェッチしてキャッシュ
+        const response = await fetch(url);
+        if (response && response.status === 200) {
+          await cache.put(url, response);
+          console.log(`[Service Worker] CSVをキャッシュしました: ${url}`);
+        }
+      } catch (error) {
+        console.error(`[Service Worker] CSVキャッシュ失敗: ${url}`, error);
+        // エラーは無視して続行
+      }
+    });
+    
+    await Promise.all(csvPromises);
+  }
   
   // 画像をキャッシュ
   if (imageUrls && imageUrls.length) {
