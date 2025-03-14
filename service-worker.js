@@ -5,14 +5,14 @@ const RESOURCE_CACHE = 'resource-cache-v4';
 
 // 静的リソースのキャッシュリスト
 const staticFilesToCache = [
-  '/',
-  '/index.html',
-  '/static/js/main.bundle.js',
-  '/static/css/main.css',
-  '/manifest.json',
-  '/favicon.ico',
-  '/logo192.png',
-  '/logo512.png'
+  '/0120/',
+  '/0120/index.html',
+  '/0120/static/js/main.bundle.js',
+  '/0120/static/css/main.css',
+  '/0120/manifest.json',
+  '/0120/favicon.ico',
+  '/0120/logo192.png',
+  '/0120/logo512.png'
 ];
 
 // インストール時の処理
@@ -348,6 +348,17 @@ self.addEventListener('message', event => {
           });
         }
       });
+  } else if (event.data && event.data.type === 'CACHE_PROGRESS') {
+    // キャッシュの進捗状況を更新
+    const { processed, total, type, url } = event.data;
+    const percentage = Math.round((processed / total) * 100);
+    console.log(`[キャッシュ進捗] ${type}: ${processed}/${total} (${percentage}%) ${url ? '- ' + url : ''}`);
+    setLoadingProgress(percentage);
+    
+    // 進捗状況の詳細をコンソールに表示
+    if (processed % 10 === 0 || processed === total) {
+      console.log(`[キャッシュ状況] ${type}の${processed}/${total}個(${percentage}%)が完了`);
+    }
   }
 });
 
@@ -358,14 +369,17 @@ async function cacheResources(imageUrls, audioUrls, csvUrls, totalResources = 0,
   const clients = await self.clients.matchAll();
   const client = clients[0]; // 最初のクライアントに進捗を報告
   
-  // 進捗状況を報告する関数
-  const reportProgress = (type, processed, total) => {
+  // 進捗状況を報告する関数をより詳細に
+  const reportProgress = (type, processed, total, url = '') => {
+    console.log(`[キャッシュ進捗] ${type}: ${processed}/${total} (${Math.round((processed/total)*100)}%) ${url ? '- ' + url : ''}`);
+    
     if (client) {
       client.postMessage({
         type: 'CACHE_PROGRESS',
         processed,
         total: total || totalResources,
-        type
+        type,
+        url
       });
     }
   };
@@ -390,7 +404,7 @@ async function cacheResources(imageUrls, audioUrls, csvUrls, totalResources = 0,
           if (existingResponse) {
             console.log(`[Service Worker] CSVは既にキャッシュ済み: ${url}`);
             processedCount++;
-            reportProgress('CSV', processedCount, totalResources);
+            reportProgress('CSV', processedCount, totalResources, url);
             return;
           }
           
@@ -410,7 +424,7 @@ async function cacheResources(imageUrls, audioUrls, csvUrls, totalResources = 0,
           console.error(`[Service Worker] CSVキャッシュ失敗: ${url}`, error);
         } finally {
           processedCount++;
-          reportProgress('CSV', processedCount, totalResources);
+          reportProgress('CSV', processedCount, totalResources, url);
         }
       });
       
@@ -438,14 +452,14 @@ async function cacheResources(imageUrls, audioUrls, csvUrls, totalResources = 0,
           if (existingResponse) {
             console.log(`[Service Worker] 画像は既にキャッシュ済み: ${url}`);
             processedCount++;
-            reportProgress('画像', processedCount, totalResources);
+            reportProgress('画像', processedCount, totalResources, url);
             return;
           }
           
           // onlyUncachedがtrueの場合、既にキャッシュされているリソースはスキップ
           if (onlyUncached && existingResponse) {
             processedCount++;
-            reportProgress('画像', processedCount, totalResources);
+            reportProgress('画像', processedCount, totalResources, url);
             return;
           }
           
@@ -463,7 +477,7 @@ async function cacheResources(imageUrls, audioUrls, csvUrls, totalResources = 0,
           console.error(`[Service Worker] 画像キャッシュ失敗: ${url}`, error);
         } finally {
           processedCount++;
-          reportProgress('画像', processedCount, totalResources);
+          reportProgress('画像', processedCount, totalResources, url);
         }
       });
       
@@ -491,14 +505,14 @@ async function cacheResources(imageUrls, audioUrls, csvUrls, totalResources = 0,
           if (existingResponse) {
             console.log(`[Service Worker] 音声は既にキャッシュ済み: ${url}`);
             processedCount++;
-            reportProgress('音声', processedCount, totalResources);
+            reportProgress('音声', processedCount, totalResources, url);
             return;
           }
           
           // onlyUncachedがtrueの場合、既にキャッシュされているリソースはスキップ
           if (onlyUncached && existingResponse) {
             processedCount++;
-            reportProgress('音声', processedCount, totalResources);
+            reportProgress('音声', processedCount, totalResources, url);
             return;
           }
           
@@ -516,7 +530,7 @@ async function cacheResources(imageUrls, audioUrls, csvUrls, totalResources = 0,
           console.error(`[Service Worker] 音声キャッシュ失敗: ${url}`, error);
         } finally {
           processedCount++;
-          reportProgress('音声', processedCount, totalResources);
+          reportProgress('音声', processedCount, totalResources, url);
         }
       });
       
