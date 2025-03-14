@@ -86,26 +86,57 @@ self.addEventListener('fetch', event => {
 
 // キャッシュファースト戦略
 async function cacheFirst(request, cacheName = DYNAMIC_CACHE) {
-  const cachedResponse = await caches.match(request);
-  if (cachedResponse) {
-    console.log('[Service Worker] キャッシュから返却:', request.url);
-    // バックグラウンドで更新チェック
-    updateResourceInBackground(request, cacheName);
-    return cachedResponse;
-  }
-  
   try {
-    const networkResponse = await fetch(request);
-    if (networkResponse && networkResponse.status === 200) {
-      const cache = await caches.open(cacheName);
-      console.log('[Service Worker] 新しいリソースをキャッシュ:', request.url);
-      cache.put(request, networkResponse.clone());
+    // まずキャッシュを確認
+    const cachedResponse = await caches.match(request);
+    if (cachedResponse) {
+      console.log('[Service Worker] キャッシュから返却:', request.url);
+      // バックグラウンドで更新チェック（オンラインの場合のみ）
+      if (navigator.onLine) {
+        updateResourceInBackground(request, cacheName);
+      }
+      return cachedResponse;
     }
-    return networkResponse;
+    
+    // キャッシュになければネットワークから取得
+    if (navigator.onLine) {
+      try {
+        const networkResponse = await fetch(request);
+        if (networkResponse && networkResponse.status === 200) {
+          const cache = await caches.open(cacheName);
+          console.log('[Service Worker] 新しいリソースをキャッシュ:', request.url);
+          cache.put(request, networkResponse.clone());
+        }
+        return networkResponse;
+      } catch (fetchError) {
+        console.error('[Service Worker] フェッチに失敗:', fetchError);
+        // フェッチに失敗した場合は、再度キャッシュを確認（念のため）
+        const reCheckCache = await caches.match(request);
+        if (reCheckCache) {
+          return reCheckCache;
+        }
+      }
+    } else {
+      console.log('[Service Worker] オフラインモードでキャッシュにないリソースが要求されました:', request.url);
+    }
+    
+    // オフラインでキャッシュにもない場合のフォールバック
+    return new Response('オフラインです。このリソースはキャッシュされていません。', {
+      status: 503,
+      statusText: 'Service Unavailable',
+      headers: new Headers({
+        'Content-Type': 'text/plain',
+      }),
+    });
   } catch (error) {
-    console.error('[Service Worker] フェッチに失敗:', error);
-    // オフライン時のフォールバック処理をここに追加できます
-    return new Response('オフラインです。このリソースはキャッシュされていません。');
+    console.error('[Service Worker] キャッシュファースト戦略でエラー:', error);
+    return new Response('エラーが発生しました。', {
+      status: 500,
+      statusText: 'Internal Server Error',
+      headers: new Headers({
+        'Content-Type': 'text/plain',
+      }),
+    });
   }
 }
 
