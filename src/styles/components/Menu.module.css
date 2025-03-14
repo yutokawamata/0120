@@ -50,23 +50,31 @@
   background-color: var(--color-background);
 }
 
+/* スタート画面 */
 .startScreen {
-  text-align: center;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  height: 60vh;
-  padding: var(--spacing-xl) 0;
+  height: 50vh;
+  gap: var(--spacing-xl);
 }
 
 .startScreen h1 {
-  margin-bottom: var(--spacing-xl);
   font-size: var(--font-size-xlarge);
+  text-align: center;
+  margin-bottom: var(--spacing-xl);
 }
 
-.startScreen span {
+.startScreen h1 span {
   color: red;
+}
+
+/* タブレットとモバイル向けのメディアクエリ */
+@media screen and (max-width: 1024px) {
+  .startScreen h1 {
+    font-size: calc(var(--font-size-xlarge) * 1.1);
+  }
 }
 
 .startScreen button {

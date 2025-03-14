@@ -9,10 +9,10 @@
   --color-text-light: #666666;
 
   /* フォントサイズ */
-  --font-size-small: 16px;
-  --font-size-medium: 20px;
-  --font-size-large: 24px;
-  --font-size-xlarge: 48px;
+  --font-size-small: 18px;
+  --font-size-medium: 24px;
+  --font-size-large: 28px;
+  --font-size-xlarge: 52px;
 
   /* スペーシング */
   --spacing-xs: 5px;
@@ -26,9 +26,9 @@
   --border-radius-md: 8px;
   --container-width: 1000px;
   --container-width-large: 1200px;
-  --button-width-normal: 340px;
-  --button-width-small: 240px;
-  --button-height: 60px;
+  --button-width-normal: 380px;
+  --button-width-small: 280px;
+  --button-height: 70px;
   --nav-height: 50px;
 
   /* グリッド */
@@ -41,4 +41,18 @@
   /* Z-index */
   --z-index-nav: 1000;
   --z-index-modal: 2000;
+}
+
+/* タブレットとモバイル向けのメディアクエリ */
+@media screen and (max-width: 1024px) {
+  :root {
+    --font-size-small: 20px;
+    --font-size-medium: 26px;
+    --font-size-large: 32px;
+    --font-size-xlarge: 56px;
+    
+    --button-width-normal: 400px;
+    --button-width-small: 300px;
+    --button-height: 80px;
+  }
 } 

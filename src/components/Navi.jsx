@@ -1,14 +1,29 @@
-import React from "react";
+import React, { useState } from "react";
 import { StateCheckers, StateTransitions, KanjiHelpers } from "../utils/stateManager";
 import styles from '../styles/components/Navi.module.css';
+
+/**
+ * アラートメッセージを表示するコンポーネント
+ */
+const AlertMessage = ({ message, onClose }) => {
+  return (
+    <div className={styles.alertOverlay}>
+      <div className={styles.alertBox}>
+        <p>{message}</p>
+        <button className={styles.alertButton} onClick={onClose}>OK</button>
+      </div>
+    </div>
+  );
+};
 
 /**
  * ナビゲーションの状態に基づいてボタンの設定を決定する
  * @param {Object} state - アプリケーションの状態
  * @param {Object} updateFunctions - 状態更新関数群
+ * @param {Function} showAlert - アラートを表示する関数
  * @returns {Object} - 表示するボタンの設定
  */
-const getNavigationConfig = (state, updateFunctions) => {
+const getNavigationConfig = (state, updateFunctions, showAlert) => {
     // 初期状態
     if (StateCheckers.isInitialScreen(state)) {
         return { showBackButton: false, showButtons: [] };
@@ -19,7 +34,7 @@ const getNavigationConfig = (state, updateFunctions) => {
         return {
             showBackButton: false,
             showButtons: [{
-                text: "モード選択へ戻る",
+                text: "モード選択に戻る",
                 onClick: () => StateTransitions.RETURN_TO_START(updateFunctions)
             }]
         };
@@ -52,6 +67,9 @@ const getNavigationConfig = (state, updateFunctions) => {
                         const selectedCount = KanjiHelpers.getSelectedKanjiCount(state);
                         if (selectedCount > 0) {
                             StateTransitions.PROCEED_TO_NEXT(updateFunctions);
+                        } else {
+                            // 漢字が選択されていない場合、アラートを表示
+                            showAlert("漢字を選択してください。");
                         }
                     }
                 },
@@ -104,6 +122,17 @@ const getNavigationConfig = (state, updateFunctions) => {
         };
     }
 
+    // たしかめよう！の学習終了後の画面（がんばったね！画面）
+    if (StateCheckers.isEndScreen(state)) {
+        return {
+            showBackButton: false,
+            showButtons: [{
+                text: "TOPへ",
+                onClick: () => StateTransitions.RETURN_TO_METHOD_SELECTION(updateFunctions)
+            }]
+        };
+    }
+
     return { showBackButton: false, showButtons: [] };
 };
 
@@ -124,6 +153,21 @@ export const Navi = ({
     updateRepetition,
     handleRemoveKanjiSelection
 }) => {
+    // アラート表示のための状態
+    const [alertMessage, setAlertMessage] = useState("");
+    const [showAlertBox, setShowAlertBox] = useState(false);
+
+    // アラートを表示する関数
+    const showAlert = (message) => {
+        setAlertMessage(message);
+        setShowAlertBox(true);
+    };
+
+    // アラートを閉じる関数
+    const closeAlert = () => {
+        setShowAlertBox(false);
+    };
+
     const updateFunctions = {
         updateNavigation,
         updateKanji,
@@ -136,39 +180,49 @@ export const Navi = ({
         return null;
     }
 
-    const config = getNavigationConfig(state, updateFunctions);
+    const config = getNavigationConfig(state, updateFunctions, showAlert);
 
     return (
-        <div className={styles.container}>
-            {/* 左側：戻るボタン */}
-            <div className={styles.leftButtons}>
-                {config.showBackButton && (
-                    <button 
-                        className={styles.button}
-                        onClick={config.backButtonAction}
-                    >
-                        ＜戻る
-                    </button>
-                )}
+        <>
+            <div className={styles.container}>
+                {/* 左側：戻るボタン */}
+                <div className={styles.leftButtons}>
+                    {config.showBackButton && (
+                        <button 
+                            className={styles.button}
+                            onClick={config.backButtonAction}
+                        >
+                            ＜戻る
+                        </button>
+                    )}
+                </div>
+
+                {/* 右側：その他のボタン群 */}
+                <div className={styles.rightButtons}>
+                    {config.showButtons && config.showButtons.length > 0 && (
+                        <div className={styles.buttonContainer}>
+                            {config.showButtons.map((button, index) => (
+                                <button
+                                    key={index}
+                                    className={styles.button}
+                                    onClick={button.onClick}
+                                >
+                                    {button.text}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                </div>
             </div>
 
-            {/* 右側：その他のボタン群 */}
-            <div className={styles.rightButtons}>
-                {config.showButtons && config.showButtons.length > 0 && (
-                    <div className={styles.buttonContainer}>
-                        {config.showButtons.map((button, index) => (
-                            <button
-                                key={index}
-                                className={styles.button}
-                                onClick={button.onClick}
-                            >
-                                {button.text}
-                            </button>
-                        ))}
-                    </div>
-                )}
-            </div>
-        </div>
+            {/* アラートメッセージ */}
+            {showAlertBox && (
+                <AlertMessage 
+                    message={alertMessage} 
+                    onClose={closeAlert} 
+                />
+            )}
+        </>
     );
 };
   

@@ -9,7 +9,7 @@ import styles from '../styles/components/Menu.module.css';
 const VersionInfo = () => {
   // 最終更新日を表示
   //const today = new Date();
-  const versionStr = "20250314-5";
+  const versionStr = "20250314-6";
   
   return (
     <div className={styles.versionInfo}>
@@ -126,7 +126,7 @@ export const Menu = ({
               <thead>
                 <tr>
                   <th className={styles.header}>漢字</th>
-                  <th className={styles.header}>読み仮名</th>
+                  <th className={styles.header}>よみがな</th>
                   <th className={styles.header}></th>
                 </tr>
               </thead>

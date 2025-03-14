@@ -202,20 +202,28 @@ export const App = () => {
   // たしかめよう！終了画面の表示
   if (StateCheckers.isEndScreen(state)) {
     return (
-      <div className={styles.endScreen}>
-        <Title state={state} {...updateFunctions} />
-        <div className={styles.endScreenImage}>
-          <Img state={state} {...updateFunctions} />
-        </div>
-        <div className={styles.endScreenButtons}>
-          <Menu 
+      <>
+        <div className={styles.navi}>
+          <Navi
             state={state}
             {...updateFunctions}
-            levels={levels}
-            handleLevelClick={handleLevelClick}
           />
         </div>
-      </div>
+        <div className={styles.endScreen}>
+          <Title state={state} {...updateFunctions} />
+          <div className={styles.endScreenImage}>
+            <Img state={state} {...updateFunctions} />
+          </div>
+          <div className={styles.endScreenButtons}>
+            <Menu 
+              state={state}
+              {...updateFunctions}
+              levels={levels}
+              handleLevelClick={handleLevelClick}
+            />
+          </div>
+        </div>
+      </>
     );
   }
 

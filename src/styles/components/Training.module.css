@@ -45,7 +45,7 @@
 
 .kanjiDisplay--individual {
   composes: kanjiDisplay;
-  font-size: min(120px, 30vw);
+  font-size: min(40px, 20vw);
   position: fixed;
   transform: translate(-50%, -50%);
   width: auto;
@@ -124,7 +124,7 @@
   }
   
   .kanjiDisplay--individual {
-    font-size: min(100px, 35vw);
+    font-size: min(40px, 35vw);
     max-width: 90vw;
   }
   
@@ -149,7 +149,7 @@
   }
   
   .kanjiDisplay--individual {
-    font-size: min(110px, 35vw);
+    font-size: min(60px, 20vw);
     max-width: 90vw;
   }
   
@@ -174,7 +174,7 @@
   }
   
   .kanjiDisplay--individual {
-    font-size: min(130px, 30vw);
+    font-size: min(80px, 20vw);
     max-width: 90vw;
   }
   

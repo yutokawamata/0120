@@ -4,15 +4,32 @@ import styles from '../styles/components/Training.module.css';
 import { Button } from './Button';
 
 /**
- * ランダムな位置を生成する関数
+ * 固定された16箇所の位置から一つをランダムに選ぶ関数
  * 個人モードで漢字をランダムな位置に表示するために使用
  * @returns {Object} x, y座標（パーセント値）
  */
 const getRandomPosition = () => {
-    return {
-        x: Math.random() * 60 + 20, // 画面の20%～80%の範囲でx座標を生成
-        y: Math.random() * 60 + 20  // 画面の20%～80%の範囲でy座標を生成
-    };
+    // 16箇所の固定座標を定義（4x4のグリッド）
+    const positions = [
+        { x: 20, y: 15 },  // 左上端
+        { x: 40, y: 15 },  // 左上中
+        { x: 60, y: 15 },  // 右上中
+        { x: 75, y: 15 },  // 右上端
+        
+        { x: 20, y: 35 },  // 上中左
+        { x: 75, y: 35 },  // 上中右
+        { x: 20, y: 65 },  // 下中左
+        { x: 75, y: 65 },  // 下中右
+        
+        { x: 20, y: 85 },  // 左下端
+        { x: 40, y: 85 },  // 左下中
+        { x: 60, y: 85 },  // 右下中
+        { x: 75, y: 85 }   // 右下端
+    ];
+    
+    // 16箇所からランダムに1つ選択
+    const randomIndex = Math.floor(Math.random() * positions.length);
+    return positions[randomIndex];
 };
 
 /**
