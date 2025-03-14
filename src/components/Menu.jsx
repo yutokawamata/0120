@@ -8,13 +8,12 @@ import styles from '../styles/components/Menu.module.css';
  */
 const VersionInfo = () => {
   // 最終更新日を表示
-  const today = new Date();
-  const dateStr = `${today.getFullYear()}${(today.getMonth() + 1).toString().padStart(2, '0')}${today.getDate().toString().padStart(2, '0')}`;
-  const versionNumber = "1"; // バージョン番号（更新時に手動で変更）
+  //const today = new Date();
+  const versionStr = "20250314-3";
   
   return (
     <div className={styles.versionInfo}>
-      <p>Ver.{dateStr}-{versionNumber}</p>
+      <p>Ver.{versionStr}</p>
     </div>
   );
 };
