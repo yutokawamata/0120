@@ -8,6 +8,104 @@ import { Button } from './Button';
  * 個人モードで漢字をランダムな位置に表示するために使用
  * @returns {Object} x, y座標（パーセント値）
  */
+// AudioContextを使用した音声再生のためのグローバル変数
+let audioContext = null;
+let audioBufferCache = {};
+let isAudioContextInitialized = false;
+
+// 音声再生が可能かどうかを確認するフラグ
+let isAudioEnabled = false;
+
+// AudioContextを初期化する関数
+const initAudioContext = () => {
+    if (isAudioContextInitialized) return;
+    
+    try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        audioContext = new AudioContext();
+        isAudioContextInitialized = true;
+        console.log('[音声初期化] AudioContextが初期化されました');
+    } catch (error) {
+        console.error('[音声初期化] AudioContextの初期化に失敗しました:', error);
+        // 失敗した場合はフォールバックとしてAudioオブジェクトを使用
+        isAudioContextInitialized = false;
+    }
+};
+
+// ユーザーインタラクションで音声再生を有効化する関数
+const enableAudio = () => {
+    if (isAudioEnabled) return Promise.resolve();
+    
+    return new Promise((resolve) => {
+        // AudioContextを初期化
+        initAudioContext();
+        
+        if (audioContext && audioContext.state === 'suspended') {
+            audioContext.resume().then(() => {
+                console.log('[音声初期化] AudioContextが再開されました');
+                isAudioEnabled = true;
+                resolve();
+            }).catch(error => {
+                console.warn('[音声初期化] AudioContextの再開に失敗しました:', error);
+                resolve();
+            });
+        } else {
+            // 無音の短い音声を再生して音声再生を有効化（フォールバック）
+            const tempAudio = new Audio();
+            tempAudio.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
+            tempAudio.volume = 0.01;
+            
+            const playHandler = () => {
+                console.log('[音声初期化] 音声再生が有効化されました');
+                isAudioEnabled = true;
+                tempAudio.removeEventListener('play', playHandler);
+                tempAudio.removeEventListener('ended', endedHandler);
+                tempAudio.removeEventListener('error', errorHandler);
+                resolve();
+            };
+            
+            const endedHandler = () => {
+                tempAudio.removeEventListener('play', playHandler);
+                tempAudio.removeEventListener('ended', endedHandler);
+                tempAudio.removeEventListener('error', errorHandler);
+                resolve();
+            };
+            
+            const errorHandler = (error) => {
+                console.warn('[音声初期化] 音声再生の有効化に失敗しました:', error);
+                tempAudio.removeEventListener('play', playHandler);
+                tempAudio.removeEventListener('ended', endedHandler);
+                tempAudio.removeEventListener('error', errorHandler);
+                // エラーが発生しても続行
+                resolve();
+            };
+            
+            tempAudio.addEventListener('play', playHandler);
+            tempAudio.addEventListener('ended', endedHandler);
+            tempAudio.addEventListener('error', errorHandler);
+            
+            // 再生を試みる
+            tempAudio.play().catch(errorHandler);
+        }
+        
+        // 5秒後にタイムアウト
+        setTimeout(() => {
+            if (!isAudioEnabled) {
+                console.warn('[音声初期化] タイムアウトしましたが続行します');
+                isAudioEnabled = true;
+                resolve();
+            }
+        }, 5000);
+    });
+};
+
+// ページ読み込み時にクリックイベントを設定
+if (typeof document !== 'undefined') {
+    document.addEventListener('click', () => {
+        enableAudio();
+    }, { once: true });
+}
+
 const getRandomPosition = () => {
     // 16箇所の固定座標を定義（4x4のグリッド）
     const positions = [
@@ -77,7 +175,7 @@ export const Training = ({
      * 音声ファイルを読み込み、再生可能な状態にする
      * 
      * @param {Object} voiceFile - 音声ファイルのパス
-     * @returns {Promise<Audio|null>} 準備完了した音声オブジェクトまたはnull
+     * @returns {Promise<string|null>} 準備完了した音声ファイルのパスまたはnull
      */
     const prepareAudio = async (voiceFile) => {
         try {
@@ -90,51 +188,11 @@ export const Training = ({
             
             // ファイルパスを取得（default経由かどうかで処理を分ける）
             const audioSrc = voiceFile.default || voiceFile;
-            const audio = new Audio(audioSrc);
             
-            // 音声の設定
-            audio.preload = "auto";      // 音声を事前に読み込む
-            audio.playsinline = true;    // インライン再生（iOS対応）
+            // パスの存在確認は行わない（CORSエラーになる可能性があるため）
+            console.log('[音声準備] 音声ファイルのパス:', audioSrc);
+            return audioSrc;
             
-            console.log('[音声準備] 音声オブジェクト作成完了、読み込み待機中');
-            
-            // 音声の読み込み完了を待つ
-            await new Promise((resolve, reject) => {
-                // 既に読み込み済みの場合はすぐに解決
-                if (audio.readyState >= 2) {
-                    console.log('[音声準備] 音声データ既に読み込み済み');
-                    resolve();
-                    return;
-                }
-                
-                // 読み込みイベントのリスナー設定
-                const loadHandler = () => {
-                    console.log('[音声準備] 音声データ読み込み完了');
-                    audio.removeEventListener('canplaythrough', loadHandler);
-                    resolve();
-                };
-                
-                const errorHandler = (e) => {
-                    console.error('[音声準備] 音声データ読み込みエラー', e);
-                    audio.removeEventListener('error', errorHandler);
-                    // エラー時も続行できるようにrejectではなくresolveを呼ぶ
-                    resolve();
-                };
-                
-                audio.addEventListener('canplaythrough', loadHandler);
-                audio.addEventListener('error', errorHandler);
-                
-                // タイムアウト処理（5秒後に強制的に続行）
-                setTimeout(() => {
-                    console.warn('[音声準備] 音声読み込みタイムアウト、続行します');
-                    audio.removeEventListener('canplaythrough', loadHandler);
-                    audio.removeEventListener('error', errorHandler);
-                    resolve();
-                }, 5000);
-            });
-
-            console.log('[音声準備] 音声準備完了');
-            return audio;
         } catch (error) {
             console.error('[音声準備] 音声データの準備中にエラーが発生:', error);
             // エラーが発生しても学習を続行できるようにnullを返す
@@ -143,76 +201,150 @@ export const Training = ({
     };
 
     /**
-     * 音声再生処理
-     * 音声を再生し、再生完了後にイラストを表示する
+     * AudioContextを使用して音声を再生する関数
      * 
-     * @param {Audio} audio - 再生する音声オブジェクト
+     * @param {string} audioSrc - 音声ファイルのパス
      * @returns {Promise} 再生完了時に解決するPromise
      */
-    const playAudio = async (audio) => {
-        if (!audio) return Promise.resolve();
+    const playWithAudioContext = async (audioSrc) => {
+        if (!audioContext) {
+            console.warn('[音声再生] AudioContextが利用できないため、通常の再生方法を使用します');
+            return playWithAudioElement(audioSrc);
+        }
         
-        console.log(`[音声再生] 開始 - 反復回数: ${state.remainingRepetitions}/${state.repetitionCount}, 漢字インデックス: ${state.currentKanjiIndex}`);
-        
-        return new Promise((resolve) => {
-            // 既存の音声があれば停止
-            if (currentAudio) {
-                console.log('[音声再生] 既存の音声を停止');
-                currentAudio.pause();
-                currentAudio.currentTime = 0;
-            }
-
-            // 再生完了時のクリーンアップ処理
-            const cleanup = () => {
-                console.log('[音声再生] 完了');
+        return new Promise(async (resolve) => {
+            try {
+                // キャッシュから音声バッファを取得するか、新たに読み込む
+                let buffer;
+                if (audioBufferCache[audioSrc]) {
+                    buffer = audioBufferCache[audioSrc];
+                    console.log('[音声再生] キャッシュから音声バッファを取得しました');
+                } else {
+                    console.log('[音声再生] 音声ファイルを読み込みます');
+                    const response = await fetch(audioSrc);
+                    const arrayBuffer = await response.arrayBuffer();
+                    buffer = await audioContext.decodeAudioData(arrayBuffer);
+                    audioBufferCache[audioSrc] = buffer;
+                    console.log('[音声再生] 音声バッファをキャッシュしました');
+                }
+                
+                // 音声ソースを作成
+                const source = audioContext.createBufferSource();
+                source.buffer = buffer;
+                source.connect(audioContext.destination);
+                
+                // 再生開始時の処理
+                setIsPlaying(true);
+                setShowImage(false);
+                setShowKanji(true);
+                console.log('[音声再生] 再生開始');
+                
+                // 再生終了時の処理
+                source.onended = () => {
+                    console.log('[音声再生] 再生終了');
+                    setIsPlaying(false);
+                    setTimeout(() => setShowImage(true), 800);
+                    resolve();
+                };
+                
+                // 最初の再生で、集団モードの「おぼえよう」の場合は遅延を入れる
+                if (isFirstPlay && state.mode === "group" && state.selectedOption === "remember" && state.remainingRepetitions === parseInt(state.repetitionCount)) {
+                    console.log('[音声再生] 最初の再生で遅延を入れる');
+                    await new Promise(resolve => setTimeout(resolve, 400));
+                    setIsFirstPlay(false);
+                }
+                
+                // 再生開始
+                source.start(0);
+                
+            } catch (error) {
+                console.error('[音声再生] AudioContextでの再生に失敗しました:', error);
                 setIsPlaying(false);
+                setTimeout(() => setShowImage(true), 800);
                 resolve();
-            };
-            
-            setCurrentAudio(audio);
+                
+                // エラーが発生した場合は通常の再生方法にフォールバック
+                return playWithAudioElement(audioSrc);
+            }
+        });
+    };
+    
+    /**
+     * 通常のAudioオブジェクトを使用して音声を再生する関数（フォールバック用）
+     * 
+     * @param {string} audioSrc - 音声ファイルのパス
+     * @returns {Promise} 再生完了時に解決するPromise
+     */
+    const playWithAudioElement = async (audioSrc) => {
+        return new Promise((resolve) => {
+            const audio = new Audio(audioSrc);
             
             // 再生開始時の処理
             audio.onplay = () => {
-                console.log('[音声再生] 再生開始');
+                console.log('[音声再生] 再生開始 (Audio要素)');
                 setIsPlaying(true);
                 setShowImage(false);
-                setShowKanji(true);  // 漢字を表示
+                setShowKanji(true);
             };
-
+            
             // 再生終了時の処理
             audio.onended = () => {
-                console.log('[音声再生] 再生終了');
-                cleanup();
-                setTimeout(() => setShowImage(true), 800); // 音声終了後、イラストを表示
+                console.log('[音声再生] 再生終了 (Audio要素)');
+                setIsPlaying(false);
+                setTimeout(() => setShowImage(true), 800);
+                resolve();
             };
-
+            
             // エラー発生時の処理
             audio.onerror = (e) => {
-                console.error('[音声再生] エラー発生', e);
-                cleanup();
-                setTimeout(() => setShowImage(true), 800); // エラー時もイラストを表示
+                console.error('[音声再生] エラー発生 (Audio要素)', e);
+                setIsPlaying(false);
+                setTimeout(() => setShowImage(true), 800);
+                resolve();
             };
-
-            // 音声再生を試みる
-            const attemptPlay = async () => {
-                try {
-                    // 最初の再生で、集団モードの「おぼえよう」の場合は遅延を入れる
-                    if (isFirstPlay && state.mode === "group" && state.selectedOption === "remember" && state.remainingRepetitions === parseInt(state.repetitionCount)) {
-                        console.log('[音声再生] 最初の再生で遅延を入れる');
-                        await new Promise(resolve => setTimeout(resolve, 400));
-                        setIsFirstPlay(false);
-                    }
-                    console.log('[音声再生] audio.play() 実行');
-                    await audio.play();
-                } catch (error) {
-                    console.error('[音声再生] 再生エラー:', error);
-                    cleanup();
-                    setTimeout(() => setShowImage(true), 800);
+            
+            // 最初の再生で、集団モードの「おぼえよう」の場合は遅延を入れる
+            const playWithDelay = async () => {
+                if (isFirstPlay && state.mode === "group" && state.selectedOption === "remember" && state.remainingRepetitions === parseInt(state.repetitionCount)) {
+                    console.log('[音声再生] 最初の再生で遅延を入れる (Audio要素)');
+                    await new Promise(resolve => setTimeout(resolve, 400));
+                    setIsFirstPlay(false);
                 }
+                
+                // 再生開始
+                audio.play().catch(error => {
+                    console.error('[音声再生] 再生エラー (Audio要素):', error);
+                    setIsPlaying(false);
+                    setTimeout(() => setShowImage(true), 800);
+                    resolve();
+                });
             };
-
-            attemptPlay();
+            
+            playWithDelay();
         });
+    };
+
+    /**
+     * 音声再生処理
+     * 音声を再生し、再生完了後にイラストを表示する
+     * 
+     * @param {string} audioSrc - 再生する音声ファイルのパス
+     * @returns {Promise} 再生完了時に解決するPromise
+     */
+    const playAudio = async (audioSrc) => {
+        if (!audioSrc) return Promise.resolve();
+        
+        console.log(`[音声再生] 開始 - 反復回数: ${state.remainingRepetitions}/${state.repetitionCount}, 漢字インデックス: ${state.currentKanjiIndex}`);
+        
+        // 音声再生を有効化（初回のみ実行される）
+        await enableAudio();
+        
+        // AudioContextが利用可能ならそれを使用、そうでなければAudio要素を使用
+        if (isAudioContextInitialized && audioContext) {
+            return playWithAudioContext(audioSrc);
+        } else {
+            return playWithAudioElement(audioSrc);
+        }
     };
 
     /**
@@ -221,6 +353,10 @@ export const Training = ({
      */
     useEffect(() => {
         let isMounted = true;
+        
+        // スタートボタンクリック時に音声再生を有効化
+        enableAudio();
+        
         // 最初の反復時のみisFirstPlayをリセット
         if (state.remainingRepetitions === parseInt(state.repetitionCount)) {
             console.log('[初期化] 最初の反復なのでisFirstPlayをリセット');
@@ -266,9 +402,9 @@ export const Training = ({
                 const firstKanji = state.kanjiList[shuffled[0]];
                 if (firstKanji?.voice) {
                     console.log('[初期化] 最初の漢字の音声を準備');
-                    const audio = await prepareAudio(firstKanji.voice);
-                    if (isMounted && audio) {
-                        setNextAudio(audio);
+                    const audioSrc = await prepareAudio(firstKanji.voice);
+                    if (isMounted && audioSrc) {
+                        setNextAudio(audioSrc);
                         console.log('[初期化] 音声準備完了');
                         
                         // 集団モードの「おぼえよう」の場合のみ、ここで音声再生
@@ -279,7 +415,7 @@ export const Training = ({
                                 console.log('[初期化] 最初の反復で遅延後に音声再生');
                                 setTimeout(async () => {
                                     if (isMounted) {
-                                        await playAudio(audio);
+                                        await playAudio(audioSrc);
                                         setHasPlayedAudio(true);
                                         setNextAudio(null); // 再生後はnextAudioをクリア
                                     }
@@ -287,7 +423,7 @@ export const Training = ({
                             } else {
                                 // 2回目以降の反復では、漢字更新処理で音声再生するため、ここでは再生しない
                                 console.log('[初期化] 2回目以降の反復では漢字更新処理で音声再生するため、ここでは再生しない');
-                                setNextAudio(audio); // 次の音声として設定しておく
+                                setNextAudio(audioSrc); // 次の音声として設定しておく
                             }
                         }
                     }
@@ -314,8 +450,8 @@ export const Training = ({
                 const nextKanjiIndex = remainingKanji[state.currentKanjiIndex + 1];
                 const nextKanji = state.kanjiList[nextKanjiIndex];
                 if (nextKanji?.voice) {
-                    const audio = await prepareAudio(nextKanji.voice);
-                    setNextAudio(audio);
+                    const audioSrc = await prepareAudio(nextKanji.voice);
+                    setNextAudio(audioSrc);
                 }
             } catch (error) {
                 console.error('次の音声の準備中にエラーが発生:', error);
@@ -332,9 +468,9 @@ export const Training = ({
         if (state.mode === "individual" && !isKanjiClicked && !isPlaying) {
             setIsKanjiClicked(true);
             try {
-                const audioToPlay = await prepareAudio(currentKanji.voice);
-                if (audioToPlay) {
-                    await playAudio(audioToPlay);
+                const audioSrc = await prepareAudio(currentKanji.voice);
+                if (audioSrc) {
+                    await playAudio(audioSrc);
                     setHasPlayedAudio(true);
                 } else {
                     // 音声がない場合は少し待ってからイラスト表示
@@ -403,9 +539,9 @@ export const Training = ({
                         } else {
                             // 先読み音声がない場合は新たに準備
                             console.log('[漢字更新] 新たに音声を準備して再生');
-                            const audioToPlay = await prepareAudio(current.voice);
-                            if (audioToPlay) {
-                                await playAudio(audioToPlay);
+                            const audioSrc = await prepareAudio(current.voice);
+                            if (audioSrc) {
+                                await playAudio(audioSrc);
                                 setHasPlayedAudio(true);
                             } else {
                                 // 音声の準備に失敗した場合、再試行
@@ -613,9 +749,11 @@ export const Training = ({
      */
     useEffect(() => {
         return () => {
-            if (currentAudio) {
-                currentAudio.pause();
-                currentAudio.currentTime = 0;
+            // AudioContextのクリーンアップ
+            if (audioContext) {
+                // AudioContextは閉じない（他の場所で再利用するため）
+                // ただし、バッファキャッシュはクリアする
+                audioBufferCache = {};
             }
         };
     }, []);
