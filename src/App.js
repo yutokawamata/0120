@@ -227,6 +227,32 @@ export const App = () => {
     );
   }
 
+  // 漢字選択画面の表示
+  if (StateCheckers.isKanjiSelection(state)) {
+    return (
+      <>
+        <div className={styles.navi}>
+          <Navi
+            state={state}
+            {...updateFunctions}
+          />
+        </div>
+        <div className={styles.kanjiSelectionContainer}>
+          <Img
+            state={state}
+            {...updateFunctions}
+          />
+          <Menu 
+            state={state}
+            {...updateFunctions}
+            levels={levels}
+            handleLevelClick={handleLevelClick}
+          />
+        </div>
+      </>
+    );
+  }
+
   // 通常画面の表示
   return (
     <>

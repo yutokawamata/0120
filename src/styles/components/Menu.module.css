@@ -7,7 +7,7 @@
 }
 
 .tableContainer {
-  max-height: calc(95vh - 200px);
+  max-height: calc(95vh - 150px);
   overflow-y: auto;
   position: relative;
   width: 100%;
@@ -77,7 +77,7 @@
   }
   
   .tableContainer {
-    max-height: calc(95vh - 180px);
+    max-height: calc(95vh - 130px);
   }
 }
 
@@ -93,7 +93,7 @@
   }
   
   .tableContainer {
-    max-height: calc(95vh - 150px);
+    max-height: calc(95vh - 120px);
   }
 }
 

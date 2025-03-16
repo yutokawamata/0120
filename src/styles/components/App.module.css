@@ -13,6 +13,12 @@
   padding: 20px;
 }
 
+/* 漢字選択画面用のコンテナスタイル - 上部の余白を減らす */
+.kanjiSelectionContainer {
+  composes: container;
+  margin-top: 60px; /* ナビバーとの間に適切な余白を設定 */
+}
+
 .title {
   display: flex;
   justify-content: center;
