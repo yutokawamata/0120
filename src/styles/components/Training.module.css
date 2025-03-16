@@ -145,22 +145,22 @@
   /* スマートフォン用の文字数に応じたフォントサイズ調整 */
   .kanjiDisplay[data-length="1"],
   .kanjiDisplay[data-length="2"]{
-    font-size: min(280px, 70vw);
+    font-size: min(160px, 70vw);
   }
   .kanjiDisplay[data-length="3"] {
-    font-size: min(240px, 70vw);
+    font-size: min(120px, 70vw);
   }
 
   .kanjiDisplay[data-length="4"] {
-    font-size: min(180px, 60vw);
+    font-size: min(100px, 60vw);
   }
 
   .kanjiDisplay[data-length="5"] {
-    font-size: min(160px, 50vw);
+    font-size: min(80px, 50vw);
   }
 
   .kanjiDisplay[data-length="6"] {
-    font-size: min(120px, 45vw);
+    font-size: min(60px, 45vw);
   }
   
   .kanjiDisplay--individual {

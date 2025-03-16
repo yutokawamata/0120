@@ -16,6 +16,11 @@ body {
   color: var(--color-text);
 }
 
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
 /* 共通のコンテナスタイル */
 .container {
   max-width: var(--container-width);

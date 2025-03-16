@@ -5,7 +5,7 @@ import { Img } from "./components/Img";
 import { Title } from "./components/Title";
 import { Training } from "./components/Training";
 import { StateCheckers } from "./utils/stateManager";
-import styles from './App.module.css';
+import styles from './styles/components/App.module.css';
 
 // CSVファイルを一括インポート
 function importCSV(r) {

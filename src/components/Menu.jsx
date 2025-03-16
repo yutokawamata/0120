@@ -9,7 +9,7 @@ import styles from '../styles/components/Menu.module.css';
 const VersionInfo = () => {
   // 最終更新日を表示
   //const today = new Date();
-  const versionStr = "20250316-1";
+  const versionStr = "20250316-2";
   
   return (
     <div className={styles.versionInfo}>
