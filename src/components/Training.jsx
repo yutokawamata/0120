@@ -797,7 +797,11 @@ export const Training = ({
             
             {/* よめるかな？モード */}
             {state.selectedOption === "read" ? (
-                <div className={styles.kanjiDisplay} onClick={handleReadingNext}>
+                <div 
+                    className={styles.kanjiDisplay} 
+                    onClick={handleReadingNext}
+                    data-length={currentKanji?.kanji?.length}
+                >
                     {showKanji && currentKanji?.kanji}
                 </div>
             ) : (
@@ -818,7 +822,10 @@ export const Training = ({
                             </div>
                         ) : (
                             // 集団モード - 中央に漢字を表示
-                            <div className={styles.kanjiDisplay}>
+                            <div 
+                                className={styles.kanjiDisplay}
+                                data-length={currentKanji?.kanji?.length}
+                            >
                                 {showKanji && currentKanji?.kanji}
                             </div>
                         )

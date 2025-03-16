@@ -27,7 +27,6 @@
 
 /* 漢字表示スタイル */
 .kanjiDisplay {
-  font-size: min(200px, 80vw);
   cursor: pointer;
   user-select: none;
   display: flex;
@@ -41,6 +40,28 @@
   text-align: center;
   position: relative;
   box-sizing: border-box;
+  font-size: min(220px, 60vw); /* デフォルトのフォントサイズを設定 */
+}
+
+/* 文字数に応じたフォントサイズ調整 - よめるかなモードと集団モードのおぼえようモード用 */
+.kanjiDisplay[data-length="1"],
+.kanjiDisplay[data-length="2"]{
+  font-size: min(380px, 70vw);
+}
+.kanjiDisplay[data-length="3"] {
+  font-size: min(340px, 70vw);
+}
+
+.kanjiDisplay[data-length="4"] {
+  font-size: min(280px, 60vw);
+}
+
+.kanjiDisplay[data-length="5"] {
+  font-size: min(220px, 50vw);
+}
+
+.kanjiDisplay[data-length="6"] {
+  font-size: min(180px, 45vw);
 }
 
 .kanjiDisplay--individual {
@@ -118,9 +139,28 @@
   }
   
   .kanjiDisplay {
-    font-size: min(60px, 80vw);
-    height: 50vh;
-    width: 90vw;
+    font-size: min(120px, 60vw); /* スマートフォン用のデフォルトフォントサイズ */
+  }
+  
+  /* スマートフォン用の文字数に応じたフォントサイズ調整 */
+  .kanjiDisplay[data-length="1"],
+  .kanjiDisplay[data-length="2"]{
+    font-size: min(280px, 70vw);
+  }
+  .kanjiDisplay[data-length="3"] {
+    font-size: min(240px, 70vw);
+  }
+
+  .kanjiDisplay[data-length="4"] {
+    font-size: min(180px, 60vw);
+  }
+
+  .kanjiDisplay[data-length="5"] {
+    font-size: min(160px, 50vw);
+  }
+
+  .kanjiDisplay[data-length="6"] {
+    font-size: min(120px, 45vw);
   }
   
   .kanjiDisplay--individual {
@@ -143,9 +183,28 @@
   }
   
   .kanjiDisplay {
-    font-size: min(140px, 80vw);
-    height: 60vh;
-    width: 90vw;
+    font-size: min(200px, 60vw); /* タブレット用のデフォルトフォントサイズ */
+  }
+  
+  /* タブレット用の文字数に応じたフォントサイズ調整 */
+  .kanjiDisplay[data-length="1"],
+  .kanjiDisplay[data-length="2"]{
+    font-size: min(360px, 70vw);
+  }
+  .kanjiDisplay[data-length="3"] {
+    font-size: min(300px, 70vw);
+  }
+
+  .kanjiDisplay[data-length="4"] {
+    font-size: min(240px, 60vw);
+  }
+
+  .kanjiDisplay[data-length="5"] {
+    font-size: min(180px, 50vw);
+  }
+
+  .kanjiDisplay[data-length="6"] {
+    font-size: min(140px, 45vw);
   }
   
   .kanjiDisplay--individual {
@@ -168,9 +227,28 @@
   }
   
   .kanjiDisplay {
-    font-size: min(180px, 80vw);
-    height: 60vh;
-    width: 90vw;
+    font-size: min(220px, 60vw); /* 大画面用のデフォルトフォントサイズ */
+  }
+  
+  /* 大画面用の文字数に応じたフォントサイズ調整 */
+  .kanjiDisplay[data-length="1"],
+  .kanjiDisplay[data-length="2"]{
+    font-size: min(380px, 80vw);
+  }
+  .kanjiDisplay[data-length="3"] {
+    font-size: min(340px, 70vw);
+  }
+
+  .kanjiDisplay[data-length="4"] {
+    font-size: min(280px, 60vw);
+  }
+
+  .kanjiDisplay[data-length="5"] {
+    font-size: min(220px, 50vw);
+  }
+
+  .kanjiDisplay[data-length="6"] {
+    font-size: min(180px, 45vw);
   }
   
   .kanjiDisplay--individual {
