@@ -106,27 +106,32 @@ if (typeof document !== 'undefined') {
     }, { once: true });
 }
 
+// 前回の位置を記憶するための変数
+let lastPositionIndex = -1;
+
 const getRandomPosition = () => {
-    // 16箇所の固定座標を定義（4x4のグリッド）
+    // 7箇所の固定座標を定義
     const positions = [
         { x: 20, y: 15 },  // 左上端
-        { x: 40, y: 15 },  // 左上中
-        { x: 60, y: 15 },  // 右上中
-        { x: 75, y: 15 },  // 右上端
-        
-        { x: 20, y: 35 },  // 上中左
-        { x: 75, y: 35 },  // 上中右
-        { x: 20, y: 65 },  // 下中左
-        { x: 75, y: 65 },  // 下中右
-        
-        { x: 20, y: 85 },  // 左下端
-        { x: 40, y: 85 },  // 左下中
-        { x: 60, y: 85 },  // 右下中
-        { x: 75, y: 85 }   // 右下端
+        { x: 50, y: 15 },  // 左上中
+        { x: 80, y: 15 },  // 右上端
+
+        { x: 50, y: 50 },  // 中央
+
+        { x: 20, y: 85 },  // 左下中
+        { x: 50, y: 85 },  // 右下中
+        { x: 80, y: 85 }   // 右下端
     ];
     
-    // 16箇所からランダムに1つ選択
-    const randomIndex = Math.floor(Math.random() * positions.length);
+    // 前回と異なる位置をランダムに選択
+    let randomIndex;
+    do {
+        randomIndex = Math.floor(Math.random() * positions.length);
+    } while (randomIndex === lastPositionIndex && positions.length > 1);
+    
+    // 選択した位置を記憶
+    lastPositionIndex = randomIndex;
+    
     return positions[randomIndex];
 };
 

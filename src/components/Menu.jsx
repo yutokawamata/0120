@@ -9,7 +9,7 @@ import styles from '../styles/components/Menu.module.css';
 const VersionInfo = () => {
   // 最終更新日を表示
   //const today = new Date();
-  const versionStr = "20250316-2";
+  const versionStr = "20250316-4";
   
   return (
     <div className={styles.versionInfo}>
@@ -211,7 +211,7 @@ export const Menu = ({
 
         {/* おぼえよう！の学習終了後のボタン */}
         {StateCheckers.isMemorizeComplete(state) && (
-          <div className={styles.endScreen}>
+          <div className={styles.buttonGroup}>
             <Button onClick={() => StateTransitions.START_TRAINING(updateFunctions, { repetitionCount: state.repetitionCount })}>
               もういちど
             </Button>

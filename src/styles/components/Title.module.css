@@ -31,6 +31,6 @@
 @media screen and (max-width: 768px) {
   .title {
     height: 40px;
-    font-size: var(--font-size-xlarge);
+    font-size: var(--font-size-large);
   }
 } 
