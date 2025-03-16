@@ -114,11 +114,14 @@ const getNavigationConfig = (state, updateFunctions, showAlert) => {
         return {
             showBackButton: true,
             backButtonAction: () => {
-                updateFunctions.updateNavigation({ selectNext: false });
+                // 反復回数選択画面に戻る
                 updateFunctions.updateRepetition({
+                    confirmationCount: "initial",
+                    remainingConfirmation: 0,
                     repetitionCount: "initial",
                     remainingRepetitions: 0
                 });
+                // 反復回数選択画面の条件を満たすために、selectNextはtrueのままにする
             },
             showButtons: [{
                 text: "TOPへ",

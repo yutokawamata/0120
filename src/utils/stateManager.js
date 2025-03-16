@@ -186,6 +186,19 @@ export const StateTransitions = {
         remainingConfirmation: 0,
         confirmationCount: "initial"
     });
+  },
+
+  // 反復回数選択画面に戻る
+  RETURN_TO_REPETITION_SELECTION: (updateFunctions) => {
+    const { updateRepetition } = updateFunctions;
+    // 反復回数選択画面に戻るために、repetitionCountを一時的にリセットして
+    // すぐに元の値に戻す処理を行う
+    updateRepetition({
+      confirmationCount: "initial",
+      remainingConfirmation: 0,
+      repetitionCount: "initial",
+      remainingRepetitions: 0
+    });
   }
 };
 
